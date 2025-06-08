@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local world = require("openmw.world")
 local types = require("openmw.types")
 local settings = require("scripts.ErnSpellBooks.settings")
+local corruptionUtil = require("scripts.ErnSpellBooks.corruption")
 local core = require("openmw.core")
 local localization = core.l10n(settings.MOD_NAME)
 
@@ -42,8 +43,8 @@ local function createBookRecord(spell, corruption)
     if spell == nil then
         error("createBookRecord(): spell is nil")
     end
-    if (corruption ~= nil) and (corruption.id == nil) then
-        error("createBookRecord(): corruption.id is nil")
+    if (corruption ~= nil) and (corruption.suffixID == nil) then
+        error("createBookRecord(): corruption.suffixID is nil")
     end
 
     local bookName = ""
@@ -54,20 +55,12 @@ local function createBookRecord(spell, corruption)
     local corruptionDescription = ""
     if corruption ~= nil then
         corruptionCostMod = math.random(5, 100)
-        local nameKey = "corruption_name_" .. tostring(corruption.id)
-        corruptionName = localization(nameKey)
-        if corruptionName == nameKey then
-            corruptionName = localization("corruption_name_notfound")
-        end
 
-        local descriptionKey = "corruption_description_" .. tostring(corruption.id)
-        corruptionDescription = localization(descriptionKey)
-        if corruptionDescription == descriptionKey then
-            corruptionDescription = localization("corruption_description_notfound")
-        end
+        local prefix = corruptionUtil.getCorruptionNameAndDescription(corruption.prefixID)
+        local suffix = corruptionUtil.getCorruptionNameAndDescription(corruption.suffixID)
 
-        bookName = localization("bookCorrupt_name", {spellName=spell.name, corruptionName=corruptionName})
-        bookBody = localization("bookCorrupt_body", {spellName=spell.name, corruptionName=corruptionName, corruptionDescription=corruptionDescription})
+        bookName = localization("bookCorrupt_name", {spellName=spell.name, corruptionPrefix=prefix.name, corruptionSuffix=suffix.name})
+        bookBody = localization("bookCorrupt_body", {spellName=spell.name, corruptionPrefix=prefix.name, corruptionSuffix=suffix.name, corruptionPrefixDescription=prefix.description, corruptionSuffixDescription=suffix.description})
     else
         bookName = localization("book_name", {spellName=spell.name})
         bookBody = localization("book_body", {spellName=spell.name})

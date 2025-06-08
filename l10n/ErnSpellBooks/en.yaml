@@ -14,14 +14,14 @@ debugMode_name: "Debug Mode"
 debugMode_description: "Print debug messages."
 
 learnMessage: "You learned {spellName}!"
-learnCorruptMessage: "You learned {spellName} of {corruptionName}!"
+learnCorruptMessage: "You learned {corruptionPrefix} {spellName} of {corruptionSuffix}!"
 
 # Spell book content. Shoutout to https://www.tamriel-rebuilt.org/content/guidelines-literature
 book_name: "Book of {spellName}"
 book_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName}</FONT></DIV><P>This spellbook contains {spellName}. Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
 
-bookCorrupt_name: "Book of {spellName} of {corruptionName}"
-bookCorrupt_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName} of {corruptionName}</FONT></DIV><P>This spellbook contains a corrupted version of {spellName} that has these additional effects:<P>{corruptionDescription}<P> Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
+bookCorrupt_name: "Book of {corruptionPrefix} {spellName} of {corruptionSuffix}"
+bookCorrupt_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{corruptionPrefix} {spellName} of {corruptionSuffix}</FONT></DIV><P>This spellbook contains a corrupted version of {spellName} that has these additional effects:<P>{corruptionPrefixDescription}<P>{corruptionSuffixDescription}<P> Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
 
 # Names for all the corruption effects
 corruption_name_notfound: "Corruption"

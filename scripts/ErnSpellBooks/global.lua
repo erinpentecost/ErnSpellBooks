@@ -34,7 +34,7 @@ settings.initSettings()
 -- ["actor_" .. actorID .. "_spell_" .. spellID] -> {bookRecordID}
 -- ["book_" .. bookRecordID] -> {spell bag}
 --
--- spell bag has: {spellID: <spellID>, corruption: {id: <corruption id>, extraStuff}}
+-- spell bag has: {spellID: <spellID>, corruption: {prefixID: <corruption id>, suffixID: <corruption id>,extraStuff}}
 local bookTracker = storage.globalSection(settings.MOD_NAME .. "bookTracker")
 bookTracker:setLifeTime(storage.LIFE_TIME.Temporary)
 
@@ -53,8 +53,11 @@ function createSpellbook(data)
         error("createSpellbook() bad spellID")
     end
     if (data.corruption ~= nil) then
-        if (data.corruption['id'] == nil) or (data.corruption['id'] == "") then
-            error("createSpellbook() bad corruptionID")
+        if (data.corruption['suffixID'] == nil) or (data.corruption['suffixID'] == "") then
+            error("createSpellbook() bad suffixID")
+        end
+        if (data.corruption['prefixID'] == nil) or (data.corruption['prefixID'] == "") then
+            error("createSpellbook() bad prefixID")
         end
     end
     if (data.container == nil) then
@@ -82,12 +85,15 @@ end
 function handleSpellCast(data)
     if data.caster == nil then
         error("handleSpellCast caster is nil")
+        return
     end
     if data.target == nil then
         error("handleSpellCast target is nil")
+        return
     end
     if data.spellID == nil then
         error("handleSpellCast spellID is nil")
+        return
     end
 
     local playerSpellKey = "actor_" .. data.caster.id .. "_spell_" .. data.spellID
@@ -98,6 +104,27 @@ function handleSpellCast(data)
     end
 
     settings.debugPrint("handleSpellCast from " .. sourceBook)
+
+    local spellBag = bookTracker:get("book_" .. sourceBook)
+    if spellBag == nil then
+        error("missing book entry for " .. sourceBook)
+        return
+    end
+    local corruption = spellBag['corruption']
+    if (corruption == nil) then
+        -- don't do anything for a normal spell
+        return
+    end
+    if (corruption.suffixID == nil) then
+        error("missing suffixID for " .. sourceBook)
+        return
+    end
+    if (corruption.prefixID == nil) then
+        error("missing prefixID for " .. sourceBook)
+        return
+    end
+    settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruption.prefixID .. " and suffix " .. corruption.suffixID)
+    -- ok, have some corruption id at this point.
 end
 
 -- params: actor, bookRecordID
@@ -126,24 +153,26 @@ function learnSpell(data)
     local playerSpellKey = "actor_" .. data.actor.id .. "_spell_" .. spellBag['spellID']
     bookTracker:set(playerSpellKey, data.bookRecordID)
 
-    local corruptionName = nil
-    if spellBag['corruption'] ~= nil then
-        local key = "corruption_name_" .. tostring(spellBag['corruption']['id'])
-        corruptionName = localization(key)
-        if corruptionName == key then
-            corruptionName = localization("corruption_name_notfound")
-        end
-    end
-
     -- actually add the spell to known spells
     local actorSpells = types.Actor.spells(data.actor)
     actorSpells:add(spell)
+    
 
+    -- notify player
+    local prefixName = nil
+    local suffixName = nil
+    if spellBag['corruption'] ~= nil then
+        local prefix = corruptionUtil.getCorruptionNameAndDescription(spellBag['corruption']['prefixID'])
+        prefixName = prefix.name
+        local suffix = corruptionUtil.getCorruptionNameAndDescription(spellBag['corruption']['suffixID'])
+        suffixName = suffix.name
+    end
     if (data.actor.type == types.Player) then
         -- data.spellName, data.corruptionName
         data.actor:sendEvent("ernShowLearnMessage", {
             spellName=spell.name,
-            corruptionName=corruptionName,
+            corruptionPrefixName=prefixName,
+            corruptionSuffixName=suffixName,
         })
     end
 end
