@@ -1,0 +1,3 @@
+GLOBAL:scripts/ErnSpellBooks/global.lua
+PLAYER:scripts/ErnSpellBooks/player.lua
+NPC, CREATURE, PLAYER:scripts/ErnSpellBooks/actor.lua
