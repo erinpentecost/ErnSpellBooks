@@ -51,16 +51,23 @@ local function createBookRecord(spell, corruption)
 
     local corruptionCostMod = 0
     local corruptionName = ""
+    local corruptionDescription = ""
     if corruption ~= nil then
         corruptionCostMod = math.random(5, 100)
-        local key = "corruptionName_" .. tostring(corruption.id)
-        corruptionName = localization(key)
-        if corruptionName == key then
-            corruptionName = localization("corruptionName_notfound")
+        local nameKey = "corruption_name_" .. tostring(corruption.id)
+        corruptionName = localization(nameKey)
+        if corruptionName == nameKey then
+            corruptionName = localization("corruption_name_notfound")
+        end
+
+        local descriptionKey = "corruption_description_" .. tostring(corruption.id)
+        corruptionDescription = localization(descriptionKey)
+        if corruptionDescription == descriptionKey then
+            corruptionDescription = localization("corruption_description_notfound")
         end
 
         bookName = localization("bookCorrupt_name", {spellName=spell.name, corruptionName=corruptionName})
-        bookBody = localization("bookCorrupt_body", {spellName=spell.name, corruptionName=corruptionName})
+        bookBody = localization("bookCorrupt_body", {spellName=spell.name, corruptionName=corruptionName, corruptionDescription=corruptionDescription})
     else
         bookName = localization("book_name", {spellName=spell.name})
         bookBody = localization("book_body", {spellName=spell.name})

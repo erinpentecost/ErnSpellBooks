@@ -76,13 +76,6 @@ function createSpellbook(data)
 
     -- put in target inventory
     bookInstance:moveInto(data.container)
-    --[[if (data.container.type == types.Actor) or (data.container.type == types.Player) or (data.container.type == types.Creature) then
-        bookInstance:moveInto(types.Actor.inventory(data.container))
-    elseif data.container.type == types.Container then
-        bookInstance:moveInto(types.Container.inventory(data.container))
-    else
-        error("bad container type")
-    end]]
 end
 
 -- params: caster, target, spellID
@@ -106,7 +99,6 @@ function handleSpellCast(data)
 
     settings.debugPrint("handleSpellCast from " .. sourceBook)
 end
-
 
 -- params: actor, bookRecordID
 function learnSpell(data)
@@ -136,10 +128,10 @@ function learnSpell(data)
 
     local corruptionName = nil
     if spellBag['corruption'] ~= nil then
-        local key = "corruptionName_" .. tostring(spellBag['corruption']['id'])
+        local key = "corruption_name_" .. tostring(spellBag['corruption']['id'])
         corruptionName = localization(key)
         if corruptionName == key then
-            corruptionName = localization("corruptionName_notfound")
+            corruptionName = localization("corruption_name_notfound")
         end
     end
 
