@@ -23,8 +23,16 @@ local MOD_NAME = "ErnSpellBooks"
 
 local settingsStore = storage.globalSection("SettingsGlobal" .. MOD_NAME)
 
+local function costScale()
+    return settingsStore:get("costScale")
+end
+
+local function debugMode()
+    return settingsStore:get("debugMode")
+end
+
 local function debugPrint(str, ...)
-    if settingsStore:get("debugMode") then
+    if debugMode() then
         local arg = {...}
         if arg ~= nil then
             print(string.format(MOD_NAME .. ": " .. str, unpack(arg)))
@@ -35,7 +43,6 @@ local function debugPrint(str, ...)
 end
 
 local function initSettings()
-    print("init settings start")
     interfaces.Settings.registerGroup {
         key = "SettingsGlobal" .. MOD_NAME,
         l10n = MOD_NAME,
@@ -45,26 +52,34 @@ local function initSettings()
         permanentStorage = false,
         settings = {
             {
+                key = "costScale",
+                name = "costScale_name",
+                description = "costScale_description",
+                default = 1,
+                renderer = "number",
+                argument = {
+                    integer = false,
+                    min = 0,
+                    max = 100
+                }
+            },
+            {
                 key = "debugMode",
                 name = "debugMode_name",
                 description = "debugMode_description",
-                default = false,
+                default = true,
                 renderer = "checkbox"
             }
         }
     }
-    print("init settings done")
-    debugPrint("init settings done")
-end
-
-
-local function debugMode()
-    return settingsStore:get("debugMode")
 end
 
 return {
     initSettings = initSettings,
     settingsStore = settingsStore,
     MOD_NAME = MOD_NAME,
+
+    costScale = costScale,
+    debugMode = debugMode,
     debugPrint = debugPrint,
 }

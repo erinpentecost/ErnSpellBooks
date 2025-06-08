@@ -20,6 +20,8 @@ local settings = require("scripts.ErnSpellBooks.settings")
 local types = require("openmw.types")
 local core = require("openmw.core")
 local self = require("openmw.self")
+local localization = core.l10n(settings.MOD_NAME)
+local ui = require('openmw.ui')
 
 
 interfaces.Settings.registerPage {
@@ -31,16 +33,38 @@ interfaces.Settings.registerPage {
 
 
 local function onActive()
-    -- debugging
-    core.sendGlobalEvent("ernCreateSpellbook", {
-        spellID = 'thunder fist',
-        corruption = nil,
-        container = self,
-    })
-    
+    if settings.debugMode() then
+        core.sendGlobalEvent("ernCreateSpellbook", {
+            spellID = 'weapon eater',
+            corruption = nil,
+            container = self,
+        })
+        core.sendGlobalEvent("ernCreateSpellbook", {
+            spellID = 'weapon eater',
+            corruption = {['id'] = 'somecorruption', ['somethingelse'] = 'ok'},
+            container = self,
+        })
+    end
+end
+
+-- params: data.spellName, data.corruptionName
+local function showLearnMessage(data)
+    settings.debugPrint("showLearnMessage")
+    if data.spellName == nil then
+        error("showLearnMessage() bad spellName")
+        return
+    end
+    if data.corruptionName == nil then
+        ui.showMessage(localization("learnMessage", {spellName=data.spellName}))
+    else
+        ui.showMessage(localization("learnCorruptMessage", {spellName=data.spellName, corruptionName=data.corruptionName}))
+    end
 end
 
 return {
+    eventHandlers = {
+        ernShowLearnMessage = showLearnMessage,
+    },
     engineHandlers = {
         onActive = onActive
     }

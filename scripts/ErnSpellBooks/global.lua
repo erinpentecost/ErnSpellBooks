@@ -19,7 +19,9 @@ local settings = require("scripts.ErnSpellBooks.settings")
 local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
+local storage = require('openmw.storage')
 local books = require("scripts.ErnSpellBooks.books")
+local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
@@ -28,15 +30,46 @@ end
 -- Init settings first to init storage which is used everywhere.
 settings.initSettings()
 
+-- bookTracker should map a couple things:
+-- ["actor_" .. actorID .. "_spell_" .. spellID] -> {bookRecordID}
+-- ["book_" .. bookRecordID] -> {spell bag}
+--
+-- spell bag has: {spellID: <spellID>, corruption: {id: <corruption id>, extraStuff}}
+local bookTracker = storage.globalSection(settings.MOD_NAME .. "bookTracker")
+bookTracker:setLifeTime(storage.LIFE_TIME.GameSession)
 
+local function saveState()
+    return bookTracker:asTable()
+end
+
+local function loadState(saved)
+    bookTracker:reset(saved)
+end
 
 -- createSpellbook creates a spell book.
 -- params: data.spellID, data.corruption, data.container
 function createSpellbook(data)
+    if (data.spellID == nil) or (data.spellID == "") then
+        error("createSpellbook() bad spellID")
+    end
+    if (data.corruption ~= nil) then
+        if (data.corruption['id'] == nil) or (data.corruption['id'] == "") then
+            error("createSpellbook() bad corruptionID")
+        end
+    end
+
+    -- make book
     local spell = core.magic.spells.records[data.spellID]  -- get by id
     local bookRecord = books.createBookRecord(spell, data.corruption)
     local bookInstance = world.createObject(bookRecord.id)
 
+    -- save what the book is attached to.
+    bookTracker:set("book_" .. bookRecord.id, {
+        ['spellID'] = data.spellID,
+        ['corruption'] = data.corruption
+    })
+
+    -- put in target inventory
     if (data.container.type == types.Actor) or (data.container.type == types.Player) or (data.container.type == types.Creature) then
         bookInstance:moveInto(types.Actor.inventory(data.container))
     elseif data.container.type == types.Container then
@@ -46,9 +79,85 @@ function createSpellbook(data)
     end
 end
 
+-- params: caster, target, spellID
+function handleSpellCast(data)
+    if data.caster == nil then
+        error("handleSpellCast caster is nil")
+    end
+    if data.target == nil then
+        error("handleSpellCast target is nil")
+    end
+    if data.spellID == nil then
+        error("handleSpellCast spellID is nil")
+    end
+
+    local playerSpellKey = "actor_" .. data.caster.id .. "_spell_" .. data.spellID
+    local sourceBook = bookTracker:get(playerSpellKey)
+
+    if sourceBook == nil then
+        settings.debugPrint("spell cast, but wasn't learned from a book")
+    end
+
+    settings.debugPrint("handleSpellCast from " .. sourceBook)
+end
+
+-- params: actor, bookRecordID
+function learnSpell(data)
+    if data.actor == nil then
+        error("learnSpell actor is nil")
+    end
+    if data.bookRecordID == nil then
+        error("learnSpell bookRecordID is nil")
+    end
+    print("learnSpell")
+
+    local spellBag = bookTracker:get("book_" .. data.bookRecordID)
+    if spellBag == nil then
+        error("no spell book record for " .. data.bookRecordID)
+        return
+    end
+
+    local spell = core.magic.spells.records[spellBag['spellID']]
+    if spell == nil then
+        error("unknown spell " .. spellBag['spellID'])
+    end
+
+    -- need to mark where the player learned the spell.
+    -- this lets us pull corruption info, if any.
+    local playerSpellKey = "actor_" .. data.actor.id .. "_spell_" .. spellBag['spellID']
+    bookTracker:set(playerSpellKey, data.bookRecordID)
+
+    local corruptionName = nil
+    if spellBag['corruption'] ~= nil then
+        local key = "corruptionName_" .. tostring(spellBag['corruption']['id'])
+        corruptionName = localization(key)
+        if corruptionName == key then
+            corruptionName = localization("corruptionName_notfound")
+        end
+    end
+
+    -- actually add the spell to known spells
+    local actorSpells = types.Actor.spells(data.actor)
+    actorSpells:add(spell)
+
+    if (data.actor.type == types.Player) then
+        -- data.spellName, data.corruptionName
+        data.actor:sendEvent("ernShowLearnMessage", {
+            spellName=spell.name,
+            corruptionName=corruptionName,
+        })
+    end
+end
+
 
 return {
     eventHandlers = {
-        ernCreateSpellbook = createSpellbook
+        ernCreateSpellbook = createSpellbook,
+        ernHandleSpellCast = handleSpellCast,
+        ernLearnSpell = learnSpell
     },
+    engineHandlers = {
+        onSave = saveState,
+        onLoad = loadState
+    }
 }

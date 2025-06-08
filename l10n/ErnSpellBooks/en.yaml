@@ -4,6 +4,9 @@ description: "Learn spells from Spell Books, which may be Corrupted."
 modSettingsTitle: "Mod Options"
 modSettingsDesc: "Change how the mod works."
 
+costScale_name: "Spell Book Cost Scale"
+costScale_description: "Change the price of spell books."
+
 debugMode_name: "Debug Mode"
 debugMode_description: "Print debug messages."
 

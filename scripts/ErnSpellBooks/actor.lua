@@ -24,11 +24,24 @@ local self = require("openmw.self")
 -- This is applied to all creatures, NPCs, and players (for self-casts).
 
 local function handleSpellCast(caster, target, spell)
-    print("Spell Cast: " .. caster.id .. " cast ".. spell.id .. " on " .. target.id)
+    settings.debugPrint("Spell Cast: " .. caster.id .. " cast ".. spell.id .. " on " .. target.id)
+    
+    core.sendGlobalEvent("ernHandleSpellCast", {
+        caster = caster,
+        target = target,
+        spellID = spell.id
+    })
 end
 
 local function handleLearn(actor, bookRecord)
-    print("Learn Spell: " .. actor.id .. " learns " .. bookRecord.name)
+    settings.debugPrint("Learn Spell: " .. actor.id .. " learns " .. bookRecord.name)
+
+    types.Actor.clearSelectedCastable(self)
+
+    core.sendGlobalEvent("ernLearnSpell", {
+        actor = actor,
+        bookRecordID = bookRecord.id
+    })
 end
 
 -- track spells we've already handled so we don't double-handle stuff.
@@ -52,7 +65,7 @@ local function onUpdate(dt)
                     handleSpellCast(spell.caster, self, spell)
                 end
             elseif (spell.item ~= nil) and 
-            (spell.item.type == types.Book) then
+            (spell.item.type == types.Book) and (spell.caster.id == self.id) then
                 local bookRecord = types.Book.record(spell.item)
                 if (bookRecord ~= nil) and (bookRecord.enchant ~= nil) and
                 (string.lower(types.Book.record(spell.item).enchant) == "ernspellbooks_learnenchantment") then

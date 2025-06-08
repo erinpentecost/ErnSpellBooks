@@ -21,7 +21,6 @@ local settings = require("scripts.ErnSpellBooks.settings")
 local core = require("openmw.core")
 local localization = core.l10n(settings.MOD_NAME)
 
-
 -- spell is a core.Magic.Spell.
 -- corruption is some bag that has an "id" record field.
 local function createBookRecord(spell, corruption)
@@ -63,7 +62,7 @@ local function createBookRecord(spell, corruption)
         name = bookName,
         skill = nil,
         text = bookBody,
-        value = math.ceil(math.min(3000, math.max(30, spell.cost ^ 1.5))),
+        value = settings.costScale() * math.ceil(math.min(3000, math.max(30, spell.cost ^ 1.5))),
         weight = 3,
     }
     draftRecord = types.Book.createRecordDraft(recordFields)
