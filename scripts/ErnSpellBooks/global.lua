@@ -101,6 +101,7 @@ function handleSpellCast(data)
     settings.debugPrint("handleSpellCast from " .. sourceBook)
 end
 
+
 -- params: actor, bookRecordID
 function learnSpell(data)
     if data.actor == nil then

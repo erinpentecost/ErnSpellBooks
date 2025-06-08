@@ -18,7 +18,7 @@ book_name: "Book of {spellName}"
 book_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName}</FONT></DIV><P>This spellbook contains {spellName}. Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
 
 bookCorrupt_name: "Book of {spellName} of {corruptionName}"
-bookCorrupt_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName} of {corruptionName}</FONT></DIV><P>This spellbook contains a corrupted version {spellName} that has additional effects. Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
+bookCorrupt_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName} of {corruptionName}</FONT></DIV><P>This spellbook contains a corrupted version of {spellName} that has additional effects. Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
 
 # Names for all the corruption effects
 corruptionName_notfound: "Corruption"
