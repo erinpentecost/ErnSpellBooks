@@ -20,6 +20,7 @@ local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
 local storage = require('openmw.storage')
+local corruptionUtil = require("scripts.ErnSpellBooks.corruption")
 local books = require("scripts.ErnSpellBooks.books")
 local localization = core.l10n(settings.MOD_NAME)
 

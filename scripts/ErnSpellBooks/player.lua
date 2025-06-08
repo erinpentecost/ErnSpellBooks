@@ -42,7 +42,7 @@ local function onActive()
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'weapon eater',
-            corruption = {['id'] = 'somecorruption', ['somethingelse'] = 'ok'},
+            corruption = {['prefixID'] = 'someprefix', ['suffixID'] = 'somesuffix'},
             container = self,
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
@@ -52,7 +52,7 @@ local function onActive()
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spells.getRandomSpell().id,
-            corruption = {['id'] = 'somecorruption', ['somethingelse'] = 'ok'},
+            corruption = {['prefixID'] = 'someprefix', ['suffixID'] = 'somesuffix'},
             container = self,
         })
     end
@@ -65,10 +65,10 @@ local function showLearnMessage(data)
         error("showLearnMessage() bad spellName")
         return
     end
-    if data.corruptionName == nil then
+    if data.corruptionPrefixName == nil then
         ui.showMessage(localization("learnMessage", {spellName=data.spellName}))
     else
-        ui.showMessage(localization("learnCorruptMessage", {spellName=data.spellName, corruptionName=data.corruptionName}))
+        ui.showMessage(localization("learnCorruptMessage", {spellName=data.spellName, corruptionPrefix=data.corruptionPrefixName, corruptionSuffix=data.corruptionSuffixName}))
     end
 end
 

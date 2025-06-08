@@ -76,7 +76,7 @@ local corruptionSuffixTable = {
 }
 
 return {
-    getCorruptionNameAndDescription,
-    corruptionPrefixTable,
-    corruptionSuffixTable,
+    getCorruptionNameAndDescription = getCorruptionNameAndDescription,
+    corruptionPrefixTable = corruptionPrefixTable,
+    corruptionSuffixTable = corruptionSuffixTable,
 }
