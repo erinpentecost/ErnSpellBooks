@@ -52,7 +52,7 @@ local function createBookRecord(spell, corruption)
     local corruptionCostMod = 0
     local corruptionName = ""
     if corruption ~= nil then
-        corruptionCostMod = math.random(-50, 100)
+        corruptionCostMod = math.random(5, 100)
         local key = "corruptionName_" .. tostring(corruption.id)
         corruptionName = localization(key)
         if corruptionName == key then

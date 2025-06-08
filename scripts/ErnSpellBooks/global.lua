@@ -36,7 +36,7 @@ settings.initSettings()
 --
 -- spell bag has: {spellID: <spellID>, corruption: {id: <corruption id>, extraStuff}}
 local bookTracker = storage.globalSection(settings.MOD_NAME .. "bookTracker")
-bookTracker:setLifeTime(storage.LIFE_TIME.GameSession)
+bookTracker:setLifeTime(storage.LIFE_TIME.Temporary)
 
 local function saveState()
     return bookTracker:asTable()
@@ -57,11 +57,16 @@ function createSpellbook(data)
             error("createSpellbook() bad corruptionID")
         end
     end
+    if (data.container == nil) then
+        error("createSpellbook() nil container")
+    end
 
     -- make book
     local spell = core.magic.spells.records[data.spellID]  -- get by id
     local bookRecord = books.createBookRecord(spell, data.corruption)
     local bookInstance = world.createObject(bookRecord.id)
+
+    settings.debugPrint("creating " .. bookRecord.name  .. " on " .. data.container.id)
 
     -- save what the book is attached to.
     bookTracker:set("book_" .. bookRecord.id, {
@@ -70,13 +75,14 @@ function createSpellbook(data)
     })
 
     -- put in target inventory
-    if (data.container.type == types.Actor) or (data.container.type == types.Player) or (data.container.type == types.Creature) then
+    bookInstance:moveInto(data.container)
+    --[[if (data.container.type == types.Actor) or (data.container.type == types.Player) or (data.container.type == types.Creature) then
         bookInstance:moveInto(types.Actor.inventory(data.container))
     elseif data.container.type == types.Container then
         bookInstance:moveInto(types.Container.inventory(data.container))
     else
-        error("bad container")
-    end
+        error("bad container type")
+    end]]
 end
 
 -- params: caster, target, spellID

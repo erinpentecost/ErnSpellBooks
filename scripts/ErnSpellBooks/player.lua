@@ -19,6 +19,7 @@ local interfaces = require("openmw.interfaces")
 local settings = require("scripts.ErnSpellBooks.settings")
 local types = require("openmw.types")
 local core = require("openmw.core")
+local spells = require("scripts.ErnSpellBooks.spells")
 local self = require("openmw.self")
 local localization = core.l10n(settings.MOD_NAME)
 local ui = require('openmw.ui')
@@ -41,6 +42,16 @@ local function onActive()
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'weapon eater',
+            corruption = {['id'] = 'somecorruption', ['somethingelse'] = 'ok'},
+            container = self,
+        })
+        core.sendGlobalEvent("ernCreateSpellbook", {
+            spellID = spells.getRandomSpell().id,
+            corruption = nil,
+            container = self,
+        })
+        core.sendGlobalEvent("ernCreateSpellbook", {
+            spellID = spells.getRandomSpell().id,
             corruption = {['id'] = 'somecorruption', ['somethingelse'] = 'ok'},
             container = self,
         })

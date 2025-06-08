@@ -7,6 +7,9 @@ modSettingsDesc: "Change how the mod works."
 costScale_name: "Spell Book Cost Scale"
 costScale_description: "Change the price of spell books."
 
+spawnChance_name: "Book Spawn Chance"
+spawnChance_description: "Percent chance to spawn spell books on wizards and book containers."
+
 debugMode_name: "Debug Mode"
 debugMode_description: "Print debug messages."
 

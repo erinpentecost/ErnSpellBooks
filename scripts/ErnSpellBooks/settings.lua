@@ -27,6 +27,10 @@ local function costScale()
     return settingsStore:get("costScale")
 end
 
+local function spawnChance()
+    return settingsStore:get("spawnChance")
+end
+
 local function debugMode()
     return settingsStore:get("debugMode")
 end
@@ -64,6 +68,18 @@ local function initSettings()
                 }
             },
             {
+                key = "spawnChance",
+                name = "spawnChance_name",
+                description = "spawnChance_description",
+                default = 100,
+                renderer = "number",
+                argument = {
+                    integer = true,
+                    min = 0,
+                    max = 100
+                }
+            },
+            {
                 key = "debugMode",
                 name = "debugMode_name",
                 description = "debugMode_description",
@@ -80,6 +96,7 @@ return {
     MOD_NAME = MOD_NAME,
 
     costScale = costScale,
+    spawnChance = spawnChance,
     debugMode = debugMode,
     debugPrint = debugPrint,
 }
