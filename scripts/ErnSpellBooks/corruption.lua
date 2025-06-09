@@ -47,32 +47,37 @@ ActorActiveEffects:modify(value, effectId, extraParam)
         #string extraParam : Optional skill or attribute ID
 ]]
 
--- corruptionID is a suffixID or prefixID
 local function getCorruptionNameAndDescription(corruptionID)
-    local corruptionName = ""
-    local corruptionDescription = ""
-
-    local nameKey = "corruption_name_" .. tostring(corruptionID)
-    corruptionName = localization(nameKey)
-    if corruptionName == nameKey then
-        corruptionName = localization("corruption_name_notfound")
+    local corruptionPrefix = ""
+    local prefixNameKey = "corruption_" .. tostring(corruptionID) .. "_prefix"
+    corruptionPrefix = localization(prefixNameKey)
+    if corruptionPrefix == prefixNameKey then
+        corruptionPrefix = localization("corruption_notfound_prefix")
     end
 
-    local descriptionKey = "corruption_description_" .. tostring(corruptionID)
+    local corruptionSuffix = ""
+    local suffixNameKey = "corruption_" .. tostring(corruptionID) .. "_sufix"
+    corruptionSuffix = localization(suffixNameKey)
+    if corruptionSuffix == suffixNameKey then
+        corruptionSuffix = localization("corruption_notfound_suffix")
+    end
+
+    local corruptionDescription = ""
+    local descriptionKey = "corruption_" .. tostring(corruptionID) .. "description"
     corruptionDescription = localization(descriptionKey)
     if corruptionDescription == descriptionKey then
-        corruptionDescription = localization("corruption_description_notfound")
+        corruptionDescription = "BUG! No localization for corruptionID: " .. corruptionID
     end
 
-    return {name = corruptionName, description = corruptionDescription}
+    return {
+        prefix = corruptionPrefix,
+        suffix = corruptionSuffix,
+        description = corruptionDescription
+    }
 end
 
-local corruptionPrefixTable = {
-    ""
-}
-
-local corruptionSuffixTable = {
-    ""
+local corruptionTable = {
+    ["id"] = {},
 }
 
 return {
