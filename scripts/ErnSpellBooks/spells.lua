@@ -43,8 +43,8 @@ local function getValidSpell(spellOrSpellID)
     return nil
 end
 
-local function getRandomSpell()
-    -- return a random suitable spell
+local function getRandomSpell(playerLevel)
+    -- return a random suitable spell of a reasonable power level
     return getValidSpell('weapon eater')
 end
 

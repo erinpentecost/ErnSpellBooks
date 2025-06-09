@@ -39,6 +39,27 @@ local function loadState(saved)
     lootTracker:reset(saved)
 end
 
+local wizardClasses = {
+    ["battlemage"] = true,
+    ["healer"] = true,
+    ["mage"] = true,
+    ["sorcerer"] = true,
+    ["mabrigash"] = true,
+    ["necromancer"] = true,
+    ["priest"] = true,
+    ["warlock"] = true,
+    ["wise woman"] = true,
+    ["witch"] = true,
+}
+
+local function isWizard(npcInstance)
+    if (types.NPC.objectIsInstance(npcInstance)) then
+        local npcClass = types.NPC.record(npcInstance).class
+        return wizardClasses[npcClass] == true
+    end
+    return false
+end
+
 local function hasScrolls(containerInstance)
     -- types.Actor.inventory(self.object)
     local inventory = types.Container.inventory(containerInstance)
@@ -52,31 +73,55 @@ local function hasScrolls(containerInstance)
     return false
 end
 
+local function getHighestPlayerLevel()
+    local lvl = 0
+    for _, player in pairs(world.players) do
+        local currentLevel = player.type.stats.level(player).current
+        lvl = math.max(lvl, currentLevel)
+    end
+    settings.debugPrint("player level: " .. lvl)
+    return lvl
+end
+
 local function onObjectActive(object)
     if (object == nil) or (object.id == nil) then
         settings.debugPrint("bad object!")
         return
     end
+
     if (settings.debugMode() ~= true) and (lootTracker:get(object.id) == true) then
         --settings.debugPrint("object activated again")
         return
     end
     --settings.debugPrint("object activated for the first time")
 
-    if (types.NPC.objectIsInstance(object)) then
+
+    -- TODO: check if NPC is a bookseller. if yes:
+    --       - remove all spellbooks they might have
+    --       - insert X random books
+    --       - mark each one as Owned by the NPC
+    --       - DON'T mark the NPC as tracked, so the loot will respawn.
+
+    if (isWizard(object)) then
         -- insert spell books!
         -- roll for each spell the actor actually knows.
+        -- insert maximum one book.
+        -- TODO: shuffle actorSpells before iterating on them.
         local actorSpells = types.Actor.spells(object)
+        local placedBook = false
         for _, spell in ipairs(actorSpells) do
-            local validSpell = spellsutil.getValidSpell(spell)
-            if validSpell ~= nil then
-                settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
-                if settings.spawnChance() > math.random(0, 99) then
-                    core.sendGlobalEvent("ernCreateSpellbook", {
-                        spellID = validSpell.id,
-                        corruption = nil,
-                        container = object,
-                    })
+            if placedBook == false then
+                local validSpell = spellsutil.getValidSpell(spell)
+                if validSpell ~= nil then
+                    settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
+                    if settings.spawnChance() > math.random(0, 99) then
+                        placedBook = true
+                        core.sendGlobalEvent("ernCreateSpellbook", {
+                            spellID = validSpell.id,
+                            corruption = nil,
+                            container = object,
+                        })
+                    end
                 end
             end
         end
@@ -86,7 +131,7 @@ local function onObjectActive(object)
             if settings.spawnChance() > math.random(0, 99) then
                 -- insert random book
                 core.sendGlobalEvent("ernCreateSpellbook", {
-                    spellID = spellsutil.getRandomSpell().id,
+                    spellID = spellsutil.getRandomSpell(getHighestPlayerLevel()).id,
                     corruption = nil,
                     container = object,
                 })
