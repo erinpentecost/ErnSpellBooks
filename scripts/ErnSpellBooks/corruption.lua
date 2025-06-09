@@ -20,68 +20,83 @@ local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
 local storage = require('openmw.storage')
+local vfs = require('openmw.vfs')
 local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
 end
---[[
-Corrupted spells are spells with some extra funky effect that occurs when you
-successfully cast some spell.
-These effects are stable for that spell; it won't be random each cast.
 
-Corrupted effects might apply an effect on the caster OR on the target OR invoke some lua script.
+-- corruptionTable maps a corruptionID to a function that takes in a data arg
+-- with these fields: id, caster, target, spellID, bookRecordID (unique per spell book)
+local corruptionTable = {}
 
-Can I get away from making spells in omwaddon? Probably not.
-https://openmw.readthedocs.io/en/latest/reference/lua-scripting/openmw_core.html##(Effects)
-
-
-We can even double magnitude of effects or durations by modifying activeEffects.
-https://openmw.readthedocs.io/en/latest/reference/lua-scripting/openmw_types.html##(ActorActiveEffects) -
-ActorActiveEffects:modify(value, effectId, extraParam)
-    Permanently modifies the magnitude of an active effect by modifying it by the provided value.
-    Note that some active effect values, such as fortify attribute effects, have no practical effect of their own, and must be paired with explicitly modifying the target stat to have any effect.
-    Parameters
-        #number value :
-        #string effectId : effect ID
-        #string extraParam : Optional skill or attribute ID
-]]
-
-local function getCorruptionNameAndDescription(corruptionID)
-    local corruptionPrefix = ""
-    local prefixNameKey = "corruption_" .. tostring(corruptionID) .. "_prefix"
-    corruptionPrefix = localization(prefixNameKey)
-    if corruptionPrefix == prefixNameKey then
-        corruptionPrefix = localization("corruption_notfound_prefix")
+-- data has .id and .func
+local function registerCorruption(data)
+    if (data == nil) or (data.id == nil) or (data.func == nil) then
+        error("RegisterCorruption() bad data")
+        return
     end
+    settings.debugPrint("Registered " .. data.id .. " corruption handler.")
+    corruptionTable[data.id] = data.func
+end
 
-    local corruptionSuffix = ""
-    local suffixNameKey = "corruption_" .. tostring(corruptionID) .. "_sufix"
-    corruptionSuffix = localization(suffixNameKey)
-    if corruptionSuffix == suffixNameKey then
-        corruptionSuffix = localization("corruption_notfound_suffix")
+local function registerHandlers()
+    -- read all corruption scripts and register them.
+    -- workaround for a bunch of restrictions.
+    for fileName in vfs.pathsWithPrefix("scripts\\"..settings.MOD_NAME.."\\corruptions") do
+        settings.debugPrint("found " .. fileName)
+        local baseName = string.lower(string.match(fileName, '(%a+)[.]lua'))
+        settings.debugPrint("requiring " .. baseName)
+        corruptionHandler = require("scripts.ErnSpellBooks.corruptions." .. baseName)
+        for id, func in pairs(corruptionHandler.corruptions) do
+            registerCorruption({id = (baseName .. "_" .. id), func = func})
+        end
     end
+end
 
-    local corruptionDescription = ""
-    local descriptionKey = "corruption_" .. tostring(corruptionID) .. "description"
-    corruptionDescription = localization(descriptionKey)
-    if corruptionDescription == descriptionKey then
-        corruptionDescription = "BUG! No localization for corruptionID: " .. corruptionID
+local function getCorruption(corruptionID)
+    -- prefix name
+    local corruptionPrefix = localization("corruption_" .. tostring(corruptionID) .. "_prefix")
+
+    -- suffix name
+    local corruptionSuffix = localization("corruption_" .. tostring(corruptionID) .. "_suffix")
+
+    -- description
+    local corruptionDescription = localization("corruption_" .. tostring(corruptionID) .. "_description")
+
+    -- func
+    func = corruptionTable[corruptionID]
+    if func == nil then
+        --settings.debugPrint("no func found for corruptionID during registration: " .. corruptionID)
+        func = function(data)
+            -- check table to see if we have it.
+            local corruptionHandler = corruptionTable[data.id]
+            if (corruptionHandler == nil) or (corruptionHandler.func == nil) then
+                -- we didn't have it, so load them all.
+                registerHandlers()
+                -- check cache again since we reloaded it.
+                corruptionHandler = corruptionTable[data.id]
+            end
+            if (corruptionHandler == nil) then
+                error("no func found for corruptionID: " .. data.id)
+            end
+            settings.debugPrint("Invoking handler for corruptionID: " .. corruptionID)
+            -- strip off namespace
+            data.id = string.match(data.id, '%a+_(.+)')
+            return corruptionHandler(data)
+        end
     end
 
     return {
         prefix = corruptionPrefix,
         suffix = corruptionSuffix,
-        description = corruptionDescription
+        description = corruptionDescription,
+        func = func
     }
 end
 
-local corruptionTable = {
-    ["id"] = {},
-}
-
 return {
-    getCorruptionNameAndDescription = getCorruptionNameAndDescription,
-    corruptionPrefixTable = corruptionPrefixTable,
-    corruptionSuffixTable = corruptionSuffixTable,
+    getCorruption = getCorruption,
+    registerHandlers = registerHandlers
 }

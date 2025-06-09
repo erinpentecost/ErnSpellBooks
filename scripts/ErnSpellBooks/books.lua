@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local world = require("openmw.world")
 local types = require("openmw.types")
 local settings = require("scripts.ErnSpellBooks.settings")
-local corruptionUtil = require("scripts.ErnSpellBooks.corruption")
 local core = require("openmw.core")
 local localization = core.l10n(settings.MOD_NAME)
 
@@ -38,8 +37,7 @@ local bookShapes = {
 }
 
 -- spell is a core.Magic.Spell.
--- corruption is some bag that has an "id" record field.
-local function createBookRecord(spell, corruption)
+local function createBookRecord(spell, prefixCorruption, suffixCorruption)
     if spell == nil then
         error("createBookRecord(): spell is nil")
     end
@@ -53,14 +51,19 @@ local function createBookRecord(spell, corruption)
     local corruptionCostMod = 0
     local corruptionName = ""
     local corruptionDescription = ""
-    if corruption ~= nil then
+    if (prefixCorruption == nil) ~= (suffixCorruption == nil) then
+        error("createBookRecord(): prefixCorruption and suffixCorruption must both be nil or not nil")
+    end
+    if prefixCorruption ~= nil then
         corruptionCostMod = math.random(5, 100)
-
-        local prefix = corruptionUtil.getCorruptionNameAndDescription(corruption.prefixID)
-        local suffix = corruptionUtil.getCorruptionNameAndDescription(corruption.suffixID)
-
-        bookName = localization("bookCorrupt_name", {spellName=spell.name, corruptionPrefix=prefix.prefix, corruptionSuffix=suffix.suffix})
-        bookBody = localization("bookCorrupt_body", {spellName=spell.name, corruptionPrefix=prefix.prefix, corruptionSuffix=suffix.suffix, corruptionPrefixDescription=prefix.description, corruptionSuffixDescription=suffix.description})
+        bookName = localization("bookCorrupt_name", {spellName=spell.name, corruptionPrefix=prefixCorruption.prefix, corruptionSuffix=suffixCorruption.suffix})
+        bookBody = localization("bookCorrupt_body", {
+            spellName=spell.name,
+            corruptionPrefix=prefixCorruption.prefix,
+            corruptionSuffix=suffixCorruption.suffix,
+            corruptionPrefixDescription=prefixCorruption.description, 
+            corruptionSuffixDescription=suffixCorruption.description,
+        })
     else
         bookName = localization("book_name", {spellName=spell.name})
         bookBody = localization("book_body", {spellName=spell.name})

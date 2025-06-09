@@ -31,6 +31,9 @@ end
 -- Init settings first to init storage which is used everywhere.
 settings.initSettings()
 
+-- load all handlers
+corruptionUtil.registerHandlers()
+
 -- bookTracker should map a couple things:
 -- ["actor_" .. actorID .. "_spell_" .. spellID] -> {bookRecordID}
 -- ["book_" .. bookRecordID] -> {spell bag}
@@ -53,6 +56,9 @@ function createSpellbook(data)
     if (data.spellID == nil) or (data.spellID == "") then
         error("createSpellbook() bad spellID")
     end
+
+    local prefixCorruption = nil
+    local suffixCorruption = nil
     if (data.corruption ~= nil) then
         if (data.corruption['suffixID'] == nil) or (data.corruption['suffixID'] == "") then
             error("createSpellbook() bad suffixID")
@@ -60,6 +66,8 @@ function createSpellbook(data)
         if (data.corruption['prefixID'] == nil) or (data.corruption['prefixID'] == "") then
             error("createSpellbook() bad prefixID")
         end
+        prefixCorruption = corruptionUtil.getCorruption(data.corruption['prefixID'])
+        suffixCorruption = corruptionUtil.getCorruption(data.corruption['suffixID'])
     end
     if (data.container == nil) then
         error("createSpellbook() nil container")
@@ -67,7 +75,8 @@ function createSpellbook(data)
 
     -- make book
     local spell = core.magic.spells.records[data.spellID]  -- get by id
-    local bookRecord = books.createBookRecord(spell, data.corruption)
+
+    local bookRecord = books.createBookRecord(spell, prefixCorruption, suffixCorruption)
     local bookInstance = world.createObject(bookRecord.id)
 
     settings.debugPrint("creating " .. bookRecord.name  .. " on " .. data.container.id)
@@ -116,16 +125,32 @@ function handleSpellCast(data)
         -- don't do anything for a normal spell
         return
     end
-    if (corruption.suffixID == nil) then
-        error("missing suffixID for " .. sourceBook)
-        return
-    end
     if (corruption.prefixID == nil) then
         error("missing prefixID for " .. sourceBook)
         return
     end
+    if (corruption.suffixID == nil) then
+        error("missing suffixID for " .. sourceBook)
+        return
+    end
     settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruption.prefixID .. " and suffix " .. corruption.suffixID)
-    -- ok, have some corruption id at this point.
+    -- ok, have some corruption ids at this point.
+    -- apply them!
+    -- id, caster, target, spellID, bookRecordID
+    corruptionUtil.getCorruption(corruption.prefixID).func({
+        id=corruption.prefixID,
+        caster=data.caster,
+        target=data.target,
+        spellID=spellID,
+        bookRecordID=sourceBook,
+    })
+    corruptionUtil.getCorruption(corruption.suffixID).func({
+        id=corruption.suffixID,
+        caster=data.caster,
+        target=data.target,
+        spellID=spellID,
+        bookRecordID=sourceBook,
+    })
 end
 
 -- params: actor, bookRecordID
@@ -163,9 +188,9 @@ function learnSpell(data)
     local prefixName = nil
     local suffixName = nil
     if spellBag['corruption'] ~= nil then
-        local prefix = corruptionUtil.getCorruptionNameAndDescription(spellBag['corruption']['prefixID'])
+        local prefix = corruptionUtil.getCorruption(spellBag['corruption']['prefixID'])
         prefixName = prefix.name
-        local suffix = corruptionUtil.getCorruptionNameAndDescription(spellBag['corruption']['suffixID'])
+        local suffix = corruptionUtil.getCorruption(spellBag['corruption']['suffixID'])
         suffixName = suffix.name
     end
     if (data.actor.type == types.Player) then

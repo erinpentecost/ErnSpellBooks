@@ -39,9 +39,9 @@ local function debugPrint(str, ...)
     if debugMode() then
         local arg = {...}
         if arg ~= nil then
-            print(string.format(MOD_NAME .. ": " .. str, unpack(arg)))
+            print(string.format("DEBUG: " .. str, unpack(arg)))
         else
-            print(MOD_NAME .. ": " .. str)
+            print("DEBUG: " .. str)
         end
     end
 end
