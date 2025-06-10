@@ -32,6 +32,10 @@ end
 -- Init settings first to init storage which is used everywhere.
 settings.initSettings()
 
+-- calls all scripts under /corruptions/
+-- we only want to do this once, ever.
+-- we also need to block on it, since the ledger needs
+-- to be full before we can process events for corrupted spells.
 local function requireCorruptions()
     settings.debugPrint("loading corruptions...")
     -- read all built-in corruption scripts and register them.
@@ -47,9 +51,6 @@ local function requireCorruptions()
         --end
     end
 end
-
--- calls all scripts under /corruptions/
--- we only want to do this once, ever.
 requireCorruptions()
 
 -- bookTracker should map a couple things:
@@ -230,17 +231,15 @@ function learnSpell(data)
     local prefixName = nil
     local suffixName = nil
     if spellBag['corruption'] ~= nil then
-        local prefix = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['prefixID'])
-        prefixName = prefix.name
-        local suffix = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['suffixID'])
-        suffixName = suffix.name
+        prefixName = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['prefixID']).prefix
+        suffixName = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['suffixID']).suffix
     end
     if (data.actor.type == types.Player) then
         -- data.spellName, data.corruptionName
         data.actor:sendEvent("ernShowLearnMessage", {
             spellName=spell.name,
-            corruptionPrefixName=prefixName,
-            corruptionSuffixName=suffixName,
+            corruptionPrefix=prefixName,
+            corruptionSuffix=suffixName,
         })
     end
 end

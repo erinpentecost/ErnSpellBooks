@@ -43,10 +43,25 @@ local function getValidSpell(spellOrSpellID)
     return nil
 end
 
-local function getRandomSpell(playerLevel)
-    -- return a random suitable spell of a reasonable power level
-    return getValidSpell('weapon eater')
+local function spellOkForLevel(playerLevel, spell)
+    return true
 end
+
+local function getRandomSpell(playerLevel)
+    randList = {}
+    for _, spell in pairs(core.magic.spells.records) do
+        if spellOkForLevel(playerLevel, spell) then
+            -- get random index to insert into. 1 to size+1.
+            -- # is a special op that gets size
+            insertAt = math.random(1, 1+#randList) 
+            table.insert(randList, insertAt, spell)
+        end
+    end
+
+    -- return a random suitable spell of a reasonable power level
+    return randList[1]
+end
+
 
 return {
     getValidSpell = getValidSpell,

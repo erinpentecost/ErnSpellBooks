@@ -20,8 +20,9 @@ local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
 local storage = require('openmw.storage')
-local spellsutil = require("scripts.ErnSpellBooks.spells")
+local interfaces = require('openmw.interfaces')
 local books = require("scripts.ErnSpellBooks.books")
+local spellUtil = require("scripts.ErnSpellBooks.spellUtil")
 local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
@@ -83,6 +84,17 @@ local function getHighestPlayerLevel()
     return lvl
 end
 
+local function getShuffledSpells(spells)
+    randList = {}
+    for _, spell in pairs(spells) do
+        -- get random index to insert into. 1 to size+1.
+        -- # is a special op that gets size
+        insertAt = math.random(1, 1+#randList) 
+        table.insert(randList, insertAt, spell)
+    end
+    return randList
+end
+
 local function onObjectActive(object)
     if (object == nil) or (object.id == nil) then
         settings.debugPrint("bad object!")
@@ -107,11 +119,11 @@ local function onObjectActive(object)
         -- roll for each spell the actor actually knows.
         -- insert maximum one book.
         -- TODO: shuffle actorSpells before iterating on them.
-        local actorSpells = types.Actor.spells(object)
+        local actorSpells = getShuffledSpells(types.Actor.spells(object))
         local placedBook = false
         for _, spell in ipairs(actorSpells) do
             if placedBook == false then
-                local validSpell = spellsutil.getValidSpell(spell)
+                local validSpell = spellUtil.getValidSpell(spell)
                 if validSpell ~= nil then
                     settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
                     if settings.spawnChance() > math.random(0, 99) then
@@ -131,7 +143,7 @@ local function onObjectActive(object)
             if settings.spawnChance() > math.random(0, 99) then
                 -- insert random book
                 core.sendGlobalEvent("ernCreateSpellbook", {
-                    spellID = spellsutil.getRandomSpell(getHighestPlayerLevel()).id,
+                    spellID = spellUtil.getRandomSpell(getHighestPlayerLevel()).id,
                     corruption = nil,
                     container = object,
                 })

@@ -17,9 +17,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 local interfaces = require("openmw.interfaces")
 local settings = require("scripts.ErnSpellBooks.settings")
+local spellUtil = require("scripts.ErnSpellBooks.spellUtil")
 local types = require("openmw.types")
 local core = require("openmw.core")
-local spells = require("scripts.ErnSpellBooks.spells")
 local self = require("openmw.self")
 local localization = core.l10n(settings.MOD_NAME)
 local ui = require('openmw.ui')
@@ -46,12 +46,12 @@ local function onActive()
             container = self,
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = spells.getRandomSpell().id,
+            spellID = spellUtil.getRandomSpell().id,
             corruption = nil,
             container = self,
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = spells.getRandomSpell().id,
+            spellID = spellUtil.getRandomSpell().id,
             corruption = {['prefixID'] = 'normal', ['suffixID'] = 'style'},
             container = self,
         })
@@ -65,10 +65,10 @@ local function showLearnMessage(data)
         error("showLearnMessage() bad spellName")
         return
     end
-    if data.corruptionPrefixName == nil then
-        ui.showMessage(localization("learnMessage", {spellName=data.spellName}))
+    if data.corruptionPrefix == nil then
+        ui.showMessage(localization("learnMessage", data))
     else
-        ui.showMessage(localization("learnCorruptMessage", {spellName=data.spellName, corruptionPrefix=data.corruptionPrefixName, corruptionSuffix=data.corruptionSuffixName}))
+        ui.showMessage(localization("learnCorruptMessage", data))
     end
 end
 
