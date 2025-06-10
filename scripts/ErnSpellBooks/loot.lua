@@ -103,6 +103,11 @@ local function shuffle(collection)
     return randList
 end
 
+local function deleteBooksFromShop(npcInstance)
+    -- TODO!
+    error("deleteBooksFromShop() not implemented")
+end
+
 local function insertIntoShop(npcInstance)
     local spellList = spellUtil.getRandomSpells(getHighestPlayerLevel(), math.random(1,4))
     for _, spell in ipairs(spellList) do
@@ -133,6 +138,7 @@ local function onObjectActive(object)
     --       - mark each one as Owned by the NPC
     --       - DON'T mark the NPC as tracked, so the loot will respawn.
     if isBookSeller(object) then
+        deleteBooksFromShop(object)
         insertIntoShop(object)
         -- Don't mark booksellers, so their stock will respawn.
         return
