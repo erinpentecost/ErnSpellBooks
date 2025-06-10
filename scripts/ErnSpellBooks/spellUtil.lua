@@ -30,9 +30,12 @@ local function getValidSpell(spellOrSpellID)
     if spellOrSpellID.id == nil then
         -- https://openmw.readthedocs.io/en/latest/reference/lua-scripting/openmw_core.html##(Spell)
         spell = core.magic.spells.records[tostring(spellOrSpellID)]
+        if spell == nil then
+            error("getValidSpell() bad spell id: " .. tostring(spellOrSpellID))
+        end
     end
+
     if spell == nil then
-        error("getValidSpell() bad spell")
         return nil
     end
 
@@ -66,7 +69,8 @@ local function spellOk(playerLevel, spell)
     return (spell.cost / 11) <= playerLevel
 end
 
-local function getRandomSpell(playerLevel)
+-- return a random suitable spells of a reasonable power level
+local function getRandomSpells(playerLevel, count)
     randList = {}
     for _, spell in pairs(core.magic.spells.records) do
         if spellOk(playerLevel, spell) then
@@ -74,16 +78,15 @@ local function getRandomSpell(playerLevel)
             -- # is a special op that gets size
             insertAt = math.random(1, 1+#randList) 
             table.insert(randList, insertAt, spell)
-            settings.debugPrint(spell.id .. " cost: " .. spell.cost)
+            --settings.debugPrint(spell.id .. " cost: " .. spell.cost)
         end
     end
 
-    -- return a random suitable spell of a reasonable power level
-    return randList[1]
+    return {table.unpack(randList, 1, count)}
 end
 
 
 return {
     getValidSpell = getValidSpell,
-    getRandomSpell = getRandomSpell,
+    getRandomSpells = getRandomSpells,
 }

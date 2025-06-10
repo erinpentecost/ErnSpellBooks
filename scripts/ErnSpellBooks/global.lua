@@ -70,7 +70,7 @@ local function loadState(saved)
 end
 
 -- createSpellbook creates a spell book.
--- params: data.spellID, data.corruption, data.container
+-- params: data.spellID, data.corruption, data.container, data.setOwner
 function createSpellbook(data)
     if (data.spellID == nil) or (data.spellID == "") then
         error("createSpellbook() bad spellID")
@@ -132,6 +132,14 @@ function createSpellbook(data)
 
     -- put in target inventory
     bookInstance:moveInto(data.container)
+
+    if data.setOwner then
+        if (types.Actor.objectIsInstance(data.container)) then
+            bookInstance.owner = data.container
+        else
+            error("data.setOwner is true but the container is not an actor")
+        end
+    end
 end
 
 -- params: caster, target, spellID

@@ -46,12 +46,12 @@ local function onActive()
             container = self,
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = spellUtil.getRandomSpell(50).id,
+            spellID = spellUtil.getRandomSpells(50, 1)[1].id,
             corruption = nil,
             container = self,
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = spellUtil.getRandomSpell(3).id,
+            spellID = spellUtil.getRandomSpells(3, 1)[1].id,
             corruption = {['prefixID'] = 'normal', ['suffixID'] = 'style'},
             container = self,
         })

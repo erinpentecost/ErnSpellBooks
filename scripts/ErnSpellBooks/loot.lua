@@ -53,6 +53,14 @@ local wizardClasses = {
     ["witch"] = true,
 }
 
+local function isBookSeller(npcInstance)
+    if (types.NPC.objectIsInstance(npcInstance)) then
+        local services = types.NPC.record(npcInstance).servicesOffered
+        return services['Books'] or services['books']
+    end
+    return false
+end
+
 local function isWizard(npcInstance)
     if (types.NPC.objectIsInstance(npcInstance)) then
         local npcClass = types.NPC.record(npcInstance).class
@@ -84,15 +92,26 @@ local function getHighestPlayerLevel()
     return lvl
 end
 
-local function getShuffledSpells(spells)
+local function shuffle(collection)
     randList = {}
-    for _, spell in pairs(spells) do
+    for _, item in pairs(collection) do
         -- get random index to insert into. 1 to size+1.
         -- # is a special op that gets size
         insertAt = math.random(1, 1+#randList) 
-        table.insert(randList, insertAt, spell)
+        table.insert(randList, insertAt, collection)
     end
     return randList
+end
+
+local function insertIntoShop(npcInstance)
+    local spellList = spellUtil.getRandomSpells(getHighestPlayerLevel(), math.random(1,4))
+    for _, spell in ipairs(spellList) do
+        core.sendGlobalEvent("ernCreateSpellbook", {
+            spellID = spell.id,
+            corruption = nil,
+            container = npcInstance,
+        })
+    end
 end
 
 local function onObjectActive(object)
@@ -101,7 +120,7 @@ local function onObjectActive(object)
         return
     end
 
-    if (settings.debugMode() ~= true) and (lootTracker:get(object.id) == true) then
+    if (lootTracker:get(object.id) == true) then
         --settings.debugPrint("object activated again")
         return
     end
@@ -113,13 +132,15 @@ local function onObjectActive(object)
     --       - insert X random books
     --       - mark each one as Owned by the NPC
     --       - DON'T mark the NPC as tracked, so the loot will respawn.
-
-    if (isWizard(object)) then
+    if isBookSeller(object) then
+        insertIntoShop(object)
+        -- Don't mark booksellers, so their stock will respawn.
+        return
+    elseif isWizard(object) then
         -- insert spell books!
         -- roll for each spell the actor actually knows.
         -- insert maximum one book.
-        -- TODO: shuffle actorSpells before iterating on them.
-        local actorSpells = getShuffledSpells(types.Actor.spells(object))
+        local actorSpells = shuffle(types.Actor.spells(object))
         local placedBook = false
         for _, spell in ipairs(actorSpells) do
             if placedBook == false then
@@ -143,18 +164,21 @@ local function onObjectActive(object)
             if settings.spawnChance() > math.random(0, 99) then
                 -- insert random book
                 core.sendGlobalEvent("ernCreateSpellbook", {
-                    spellID = spellUtil.getRandomSpell(getHighestPlayerLevel()).id,
+                    spellID = spellUtil.getRandomSpells(getHighestPlayerLevel(), 1)[1].id,
                     corruption = nil,
                     container = object,
                 })
             end
         end
     else
+        -- invalid object, don't mark it.
         return
     end
 
     -- mark as done so we don't re-insert.
-    lootTracker:set(object.id, true)
+    if (settings.debugMode() ~= true) then
+        lootTracker:set(object.id, true)
+    end
 end
 
 
