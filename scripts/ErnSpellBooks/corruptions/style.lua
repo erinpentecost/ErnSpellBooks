@@ -15,9 +15,10 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
-local corruption = require("scripts.ErnSpellBooks.corruption")
 local world = require('openmw.world')
 local core = require("openmw.core")
+local settings = require("scripts.ErnSpellBooks.settings")
+local interfaces = require('openmw.interfaces')
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
@@ -34,10 +35,9 @@ local function applyCorruption(data)
         {object = hatInstance, actor = data.target, force = true})
 end
 
--- Register any corruption handlers here.
--- Don't worry about name collisions.
-return {
-    corruptions = {
-        ["hat"] = applyCorruption
-    }
-}
+-- Register the corruption in the ledger.
+interfaces.ErnCorruptionLedger.registerCorruption({
+    id="style",
+    func=applyCorruption,
+    minimumLevel=0,
+})

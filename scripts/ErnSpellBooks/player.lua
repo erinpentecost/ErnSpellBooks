@@ -42,7 +42,7 @@ local function onActive()
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'weapon eater',
-            corruption = {['prefixID'] = 'style_hat', ['suffixID'] = 'normal_id'},
+            corruption = {['prefixID'] = 'style', ['suffixID'] = 'normal'},
             container = self,
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
@@ -52,7 +52,7 @@ local function onActive()
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spells.getRandomSpell().id,
-            corruption = {['prefixID'] = 'normal_id', ['suffixID'] = 'style_hat'},
+            corruption = {['prefixID'] = 'normal', ['suffixID'] = 'style'},
             container = self,
         })
     end

@@ -20,8 +20,9 @@ local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
 local storage = require('openmw.storage')
-local corruptionUtil = require("scripts.ErnSpellBooks.corruption")
 local books = require("scripts.ErnSpellBooks.books")
+local interfaces = require('openmw.interfaces')
+local vfs = require('openmw.vfs')
 local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
@@ -31,14 +32,31 @@ end
 -- Init settings first to init storage which is used everywhere.
 settings.initSettings()
 
--- load all handlers
-corruptionUtil.registerHandlers()
+local function requireCorruptions()
+    settings.debugPrint("loading corruptions...")
+    -- read all built-in corruption scripts and register them.
+    -- these are namespaced by their filename.
+    -- workaround for a bunch of restrictions.
+    for fileName in vfs.pathsWithPrefix("scripts\\"..settings.MOD_NAME.."\\corruptions") do
+        settings.debugPrint("found " .. fileName)
+        local baseName = string.lower(string.match(fileName, '(%a+)[.]lua'))
+        settings.debugPrint("requiring " .. baseName)
+        require("scripts.ErnSpellBooks.corruptions." .. baseName)
+        --for id, func in pairs(corruptionHandler.corruptions) do
+        --    registerCorruption({id = (baseName .. "_" .. id), func = func})
+        --end
+    end
+end
+
+-- calls all scripts under /corruptions/
+-- we only want to do this once, ever.
+requireCorruptions()
 
 -- bookTracker should map a couple things:
 -- ["actor_" .. actorID .. "_spell_" .. spellID] -> {bookRecordID}
 -- ["book_" .. bookRecordID] -> {spell bag}
---
--- spell bag has: {spellID: <spellID>, corruption: {prefixID: <corruption id>, suffixID: <corruption id>,extraStuff}}
+-- ["spell_" .. spellID .. "_" .. prefixID .. "_" .. suffixID] -> {bookRecordID}
+-- spell bag has: {spellID: <spellID>, corruption: {prefixID: <corruption id>, suffixID: <corruption id>}}
 local bookTracker = storage.globalSection(settings.MOD_NAME .. "bookTracker")
 bookTracker:setLifeTime(storage.LIFE_TIME.Temporary)
 
@@ -57,6 +75,18 @@ function createSpellbook(data)
         error("createSpellbook() bad spellID")
     end
 
+    if (data.container == nil) then
+        error("createSpellbook() nil container")
+    end
+
+    -- make sure spell is valid.
+    local spell = core.magic.spells.records[data.spellID]  -- get by id
+    if spell == nil then
+        error("invalid spell: " .. data.spellID)
+        return
+    end
+
+    local spellKey = "spell_" .. data.spellID
     local prefixCorruption = nil
     local suffixCorruption = nil
     if (data.corruption ~= nil) then
@@ -66,17 +96,29 @@ function createSpellbook(data)
         if (data.corruption['prefixID'] == nil) or (data.corruption['prefixID'] == "") then
             error("createSpellbook() bad prefixID")
         end
-        prefixCorruption = corruptionUtil.getCorruption(data.corruption['prefixID'])
-        suffixCorruption = corruptionUtil.getCorruption(data.corruption['suffixID'])
+        prefixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['prefixID'])
+        suffixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['suffixID'])
+
+        spellKey = "spell_" .. data.spellID .. "_" .. prefixCorruption.id .. "_" .. suffixCorruption.id
     end
-    if (data.container == nil) then
-        error("createSpellbook() nil container")
+    
+
+    -- If we already made a book for this spell + corruption combo, re-use it.
+    local bookRecord = nil
+    local reusedBook = bookTracker:get(spellKey)
+    if reusedBook ~= nil then
+        settings.debugPrint("re-using book record for spell "..spellKey.. ": " .. reusedBook)
+        bookRecord = types.Book.record(reusedBook)
+        if bookRecord == nil then
+            error("expected a book record " .. reusedBook .. " to exist")
+            return
+        end
+    else
+        settings.debugPrint("making a new book record for spell "..spellKey)
+        bookRecord = books.createBookRecord(spell, prefixCorruption, suffixCorruption)
+        bookTracker:set(spellKey, bookRecord.id)
     end
 
-    -- make book
-    local spell = core.magic.spells.records[data.spellID]  -- get by id
-
-    local bookRecord = books.createBookRecord(spell, prefixCorruption, suffixCorruption)
     local bookInstance = world.createObject(bookRecord.id)
 
     settings.debugPrint("creating " .. bookRecord.name  .. " on " .. data.container.id)
@@ -137,14 +179,14 @@ function handleSpellCast(data)
     -- ok, have some corruption ids at this point.
     -- apply them!
     -- id, caster, target, spellID, bookRecordID
-    corruptionUtil.getCorruption(corruption.prefixID).func({
+    interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID).func({
         id=corruption.prefixID,
         caster=data.caster,
         target=data.target,
         spellID=spellID,
         bookRecordID=sourceBook,
     })
-    corruptionUtil.getCorruption(corruption.suffixID).func({
+    interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID).func({
         id=corruption.suffixID,
         caster=data.caster,
         target=data.target,
@@ -188,9 +230,9 @@ function learnSpell(data)
     local prefixName = nil
     local suffixName = nil
     if spellBag['corruption'] ~= nil then
-        local prefix = corruptionUtil.getCorruption(spellBag['corruption']['prefixID'])
+        local prefix = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['prefixID'])
         prefixName = prefix.name
-        local suffix = corruptionUtil.getCorruption(spellBag['corruption']['suffixID'])
+        local suffix = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['suffixID'])
         suffixName = suffix.name
     end
     if (data.actor.type == types.Player) then

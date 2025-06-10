@@ -1,0 +1,84 @@
+--[[
+ErnSpellBooks for OpenMW.
+Copyright (C) 2025 Erin Pentecost
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+]]
+local settings = require("scripts.ErnSpellBooks.settings")
+local core = require("openmw.core")
+local localization = core.l10n(settings.MOD_NAME)
+
+if require("openmw.core").API_REVISION < 62 then
+    error("OpenMW 0.49 or newer is required!")
+end
+
+-- corruptionTable maps a corruptionID to a bag with .id, .func, and .minimumLevel.
+-- minimumLevel informs when it should drop in random tables. This is an integer.
+local corruptionTable = {}
+
+
+-- data has .id, .func, and .minimumLevel
+-- func takes in a bag with these fields:
+--      id (string, this is the corruptionID)
+--      caster (actor)
+--      target (actor)
+--      spellID (string)
+--      bookRecordID (string, unique to the specific book)
+local function registerCorruption(data)
+    if (data == nil) or (data.id == nil) or (data.func == nil) then
+        error("RegisterCorruption() bad data")
+        return
+    end
+    -- minimumLevel is optional
+    if data.minimumLevel == nil then
+        data.minimumLevel = 0
+    end
+    settings.debugPrint("Registered " .. data.id .. " corruption handler.")
+    corruptionTable[data.id] = data
+end
+
+local function getCorruption(corruptionID)
+    -- prefix name
+    local corruptionPrefix = localization("corruption_" .. tostring(corruptionID) .. "_prefix")
+
+    -- suffix name
+    local corruptionSuffix = localization("corruption_" .. tostring(corruptionID) .. "_suffix")
+
+    -- description
+    local corruptionDescription = localization("corruption_" .. tostring(corruptionID) .. "_description")
+
+    bag = corruptionTable[corruptionID]
+    if bag == nil then
+        error("corruption with id '" .. corruptionID .. "' not found!")
+        return nil
+    end
+
+    return {
+        prefix = corruptionPrefix,
+        suffix = corruptionSuffix,
+        description = corruptionDescription,
+        id = bag.id,
+        func = bag.func,
+        minimumLevel = bag.minimumLevel,
+    }
+end
+
+return {
+    interfaceName = "ErnCorruptionLedger",
+    interface = {
+        version = 1,
+        registerCorruption = registerCorruption,
+        getCorruption = getCorruption,
+    }
+}
