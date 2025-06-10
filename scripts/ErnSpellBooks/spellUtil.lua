@@ -36,21 +36,32 @@ local function getValidSpell(spellOrSpellID)
         return nil
     end
     
-    -- types or type?
     if spell.type == core.magic.SPELL_TYPE.Spell and spell.cost > 0 then
         return spell
     end
+
+    -- it turns out that most spells are garbage.
+    if spell.alwaysSucceedFlag then
+        return false
+    end
+    if spell.autocalcFlag ~= true then
+        return false
+    end
+    if spell.cost < 5 then
+        return false
+    end
+
     return nil
 end
 
-local function spellOkForLevel(playerLevel, spell)
-    return true
+local function spellOk(playerLevel, spell)
+    return getValidSpell(spell) ~= nil
 end
 
 local function getRandomSpell(playerLevel)
     randList = {}
     for _, spell in pairs(core.magic.spells.records) do
-        if spellOkForLevel(playerLevel, spell) then
+        if spellOk(playerLevel, spell) then
             -- get random index to insert into. 1 to size+1.
             -- # is a special op that gets size
             insertAt = math.random(1, 1+#randList) 
