@@ -35,27 +35,35 @@ local function getValidSpell(spellOrSpellID)
         error("getValidSpell() bad spell")
         return nil
     end
-    
-    if spell.type == core.magic.SPELL_TYPE.Spell and spell.cost > 0 then
-        return spell
+
+    if spell.type ~= core.magic.SPELL_TYPE.Spell then
+        return nil
     end
 
     -- it turns out that most spells are garbage.
+    if spell.cost < 5 then
+        return nil
+    end
+    if spell.cost > 300 then
+        -- these are usually weird spells not intended for players
+        return nil
+    end
     if spell.alwaysSucceedFlag then
-        return false
+        return nil
     end
     if spell.autocalcFlag ~= true then
-        return false
-    end
-    if spell.cost < 5 then
-        return false
+        return nil
     end
 
-    return nil
+    return spell
 end
 
 local function spellOk(playerLevel, spell)
-    return getValidSpell(spell) ~= nil
+    if getValidSpell(spell) == nil then
+        return false
+    end
+    -- don't unlock high level spells right away.
+    return (spell.cost / 11) <= playerLevel
 end
 
 local function getRandomSpell(playerLevel)
@@ -66,6 +74,7 @@ local function getRandomSpell(playerLevel)
             -- # is a special op that gets size
             insertAt = math.random(1, 1+#randList) 
             table.insert(randList, insertAt, spell)
+            settings.debugPrint(spell.id .. " cost: " .. spell.cost)
         end
     end
 
