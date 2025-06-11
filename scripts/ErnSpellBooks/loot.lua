@@ -106,6 +106,25 @@ local function shuffle(collection)
     return randList
 end
 
+local function getRandomCorruption()
+    local corruption = nil
+    if settings.corruptionChance() > math.random(0, 99) then
+        local randList = interfaces.ErnCorruptionLedger.getRandomCorruptions(getHighestPlayerLevel(), 2)
+        if randList == nil then
+            error("got a nil corruption list!")
+        end
+        if #randList ~= 2 then
+            error("got " .. tostring(#randList) .. " corruptions, but expected 2")
+            return nil
+        end
+        corruption = {
+            ['prefixID'] = randList[0].id,
+            ['suffixID'] = randList[1].id,
+        }
+    end
+    return corruption
+end
+
 local function deleteBooksFromShop(npcInstance)
     local books = types.Actor.inventory(npcInstance):getAll(types.Book)
     for _, book in ipairs(books) do
@@ -122,7 +141,7 @@ local function insertIntoShop(npcInstance)
     for _, spell in ipairs(spellList) do
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spell.id,
-            corruption = nil,
+            corruption = getRandomCorruption(),
             container = npcInstance
         })
     end
@@ -161,7 +180,7 @@ local function onObjectActive(object)
                         settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
                         core.sendGlobalEvent("ernCreateSpellbook", {
                             spellID = validSpell.id,
-                            corruption = nil,
+                            corruption = getRandomCorruption(),
                             container = object
                         })
                         placedBook = true
@@ -178,7 +197,7 @@ local function onObjectActive(object)
                 -- insert random book
                 core.sendGlobalEvent("ernCreateSpellbook", {
                     spellID = spellUtil.getRandomSpells(getHighestPlayerLevel(), 1)[1].id,
-                    corruption = nil,
+                    corruption = getRandomCorruption(),
                     container = object
                 })
             end

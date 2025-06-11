@@ -10,6 +10,9 @@ costScale_description: "Change the gold price of spell books."
 spawnChance_name: "Book Spawn Chance"
 spawnChance_description: "Percent chance to spawn spell a book on a wizard or a container containing scrolls."
 
+corruptionChance_name: "Corruption Chance"
+corruptionChance_description: "Percent chance that a corrupted spell book will be created instead of the normal version."
+
 debugMode_name: "Debug Mode"
 debugMode_description: "Print debug messages."
 

@@ -82,7 +82,7 @@ local function getRandomSpells(playerLevel, count)
         end
     end
 
-    return {table.unpack(randList, 1, count)}
+    return {table.unpack(randList, 1, 1+count)}
 end
 
 return {

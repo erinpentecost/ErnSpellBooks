@@ -14,8 +14,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-]]
-local interfaces = require("openmw.interfaces")
+]] local interfaces = require("openmw.interfaces")
 local storage = require("openmw.storage")
 local types = require("openmw.types")
 
@@ -29,6 +28,10 @@ end
 
 local function spawnChance()
     return settingsStore:get("spawnChance")
+end
+
+local function corruptionChance()
+    return settingsStore:get("corruptionChance")
 end
 
 local function debugMode()
@@ -77,6 +80,17 @@ local function initSettings()
                 max = 100
             }
         }, {
+            key = "corruptionChance",
+            name = "corruptionChance_name",
+            description = "corruptionChance_description",
+            default = 66,
+            renderer = "number",
+            argument = {
+                integer = true,
+                min = 0,
+                max = 100
+            }
+        }, {
             key = "debugMode",
             name = "debugMode_name",
             description = "debugMode_description",
@@ -93,6 +107,7 @@ return {
 
     costScale = costScale,
     spawnChance = spawnChance,
+    corruptionChance = corruptionChance,
     debugMode = debugMode,
     debugPrint = debugPrint
 }

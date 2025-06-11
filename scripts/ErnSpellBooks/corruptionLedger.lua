@@ -80,14 +80,21 @@ local function getRandomCorruptions(playerLevel, count)
     local randList = {}
     for _, id in pairs(corruptionIDs) do
         local corruption = corruptionTable[id]
-        if corruption.minimumLevel >= playerLevel then
+        if corruption == nil then
+            error("bad corruptionID: " .. id)
+        end
+        if corruption.minimumLevel <= playerLevel then
             -- get random index to insert into. 1 to size+1.
-            -- # is a special op that gets size
             local insertAt = math.random(1, 1 + #corruptionIDs)
             table.insert(randList, insertAt, corruption)
+            -- >>>> this is getting hit twice <<<<
+            settings.debugPrint("getRandomCorruptions() inserted " .. corruption.id)
         end
     end
-    return {table.unpack(randList, 1, count)}
+    -- >>>> but randList is empty and outList is has 3 elements!! <<<<<
+    local outList = {table.unpack(randList, 1, 1+count)}
+    settings.debugPrint("getRandomCorruptions() selected " .. tostring(#outList) .. " corruptions from " .. tostring(#randList) .. " options.")
+    return outList
 end
 
 return {
