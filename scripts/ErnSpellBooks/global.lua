@@ -248,6 +248,7 @@ function learnSpell(data)
             spellName=spell.name,
             corruptionPrefix=prefixName,
             corruptionSuffix=suffixName,
+            spellID=spell.id,
         })
     end
 end

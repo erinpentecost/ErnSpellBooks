@@ -70,6 +70,9 @@ local function showLearnMessage(data)
     else
         ui.showMessage(localization("learnCorruptMessage", data))
     end
+    -- equip the spell, too.
+    local spell = core.magic.spells.records[data.spellID]
+    types.Actor.setSelectedSpell(self, spell)
 end
 
 return {

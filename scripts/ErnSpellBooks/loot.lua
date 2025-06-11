@@ -32,6 +32,9 @@ end
 local lootTracker = storage.globalSection(settings.MOD_NAME .. "lootTracker")
 lootTracker:setLifeTime(storage.LIFE_TIME.Temporary)
 
+-- resetLootAge is one in-game day in seconds.
+local resetLootAge = 86400
+
 local function saveState()
     return lootTracker:asTable()
 end
@@ -104,8 +107,15 @@ local function shuffle(collection)
 end
 
 local function deleteBooksFromShop(npcInstance)
-    -- TODO!
-    error("deleteBooksFromShop() not implemented")
+    local books = types.Actor.inventory(npcInstance):getAll(types.Book)
+    for _, book in ipairs(books) do
+        local bookRecord = types.Book.record(book)
+        if (bookRecord.enchant ~= nil) and
+        (string.lower(bookRecord.enchant) == "ernspellbooks_learnenchantment") then
+            settings.debugPrint("deleting book from shopkeeper: " .. bookRecord.name)
+            book:remove()
+        end
+    end
 end
 
 local function insertIntoShop(npcInstance)
@@ -120,51 +130,49 @@ local function insertIntoShop(npcInstance)
 end
 
 local function onObjectActive(object)
+    local now = world.getGameTime()
     if (object == nil) or (object.id == nil) then
         settings.debugPrint("bad object!")
         return
     end
 
-    if (lootTracker:get(object.id) == true) then
+    local marked = lootTracker:get(object.id)
+    if (marked ~= nil) and ((marked == true) or (marked + resetLootAge > now)) then
         --settings.debugPrint("object activated again")
         return
     end
     --settings.debugPrint("object activated for the first time")
 
-
-    -- TODO: check if NPC is a bookseller. if yes:
-    --       - remove all spellbooks they might have
-    --       - insert X random books
-    --       - mark each one as Owned by the NPC
-    --       - DON'T mark the NPC as tracked, so the loot will respawn.
     if isBookSeller(object) then
+        -- Keep book seller spell book inventory stocked.
         deleteBooksFromShop(object)
         insertIntoShop(object)
-        -- Don't mark booksellers, so their stock will respawn.
+        -- Mark as done temporarily so we will reset.
+        lootTracker:set(object.id, now)
         return
     elseif isWizard(object) then
-        -- insert spell books!
-        -- roll for each spell the actor actually knows.
-        -- insert maximum one book.
-        local actorSpells = shuffle(types.Actor.spells(object))
-        local placedBook = false
-        for _, spell in ipairs(actorSpells) do
-            if placedBook == false then
-                local validSpell = spellUtil.getValidSpell(spell)
-                if validSpell ~= nil then
-                    settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
-                    if settings.spawnChance() > math.random(0, 99) then
-                        placedBook = true
+        -- Roll to insert one random spell book of a spell the wizard knows.
+        if settings.spawnChance() > math.random(0, 99) then
+            local actorSpells = shuffle(types.Actor.spells(object))
+            local placedBook = false
+            for _, spell in ipairs(actorSpells) do
+                if placedBook ~= false then
+                    local validSpell = spellUtil.getValidSpell(spell)
+                    if validSpell ~= nil then
+                        settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
                         core.sendGlobalEvent("ernCreateSpellbook", {
                             spellID = validSpell.id,
                             corruption = nil,
                             container = object,
                         })
+                        placedBook = true
                     end
                 end
             end
         end
     elseif (types.Container.objectIsInstance(object)) then
+        -- If the container has a scroll, then it makes sense that
+        -- maybe there is a spell book there, too.
         local containerRecord = types.Container.record(object)
         if (containerRecord.isOrganic ~= true) and hasScrolls(object) then
             if settings.spawnChance() > math.random(0, 99) then
@@ -181,10 +189,8 @@ local function onObjectActive(object)
         return
     end
 
-    -- mark as done so we don't re-insert.
-    if (settings.debugMode() ~= true) then
-        lootTracker:set(object.id, true)
-    end
+    -- mark as done permanently so we don't re-insert.
+    lootTracker:set(object.id, true)
 end
 
 
