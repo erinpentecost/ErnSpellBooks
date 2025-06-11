@@ -71,6 +71,14 @@ local function loadState(saved)
     bookTracker:reset(saved)
 end
 
+local function safeID(obj)
+    if obj == nil then
+        return "nil"
+    else
+        return tostring(obj.id)
+    end
+end
+
 -- createSpellbook creates a spell book.
 -- params: data.spellID, data.corruption, data.container, data.setOwner
 local function createSpellbook(data)
@@ -101,8 +109,8 @@ local function createSpellbook(data)
         if (suffixID ~= nil) and (suffixID ~= "") then
             suffixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['suffixID'])
         end
-        spellKey = "spell_" .. data.spellID .. "_" .. tostring(prefixCorruption.id) .. "_" ..
-                       tostring(suffixCorruption.id)
+        spellKey = "spell_" .. data.spellID .. "_" .. safeID(prefixCorruption) .. "_" ..
+        safeID(suffixCorruption)
     end
 
     -- If we already made a book for this spell + corruption combo, re-use it.
@@ -183,12 +191,45 @@ local function handleSpellCast(data)
 
     if sourceBook == nil then
         settings.debugPrint("spell cast, but wasn't learned from a book")
+        return
     end
 
     settings.debugPrint("handleSpellCast from " .. sourceBook)
 
-    -- TODO: forward event to onCast
-    error("not implemented")
+    local corruption = getCorruptionsFromBookID(sourceBook)
+
+    if corruption == nil then
+        -- not corrupted, don't do anything else.
+        return
+    end
+
+    -- ok, have some corruption ids at this point.
+    -- apply them!
+    -- id, caster, spellID, bookRecordID
+    if corruption.prefixID ~= nil then
+        local prefix = interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID)
+        if prefix.onCast ~= nil then
+            print("Running corruption " .. corruption.prefixID .. ".onCast() with spell " .. data.spellID .. ".")
+            prefix.onCast({
+                id = corruption.prefixID,
+                caster = data.caster,
+                spellID = data.spellID,
+                bookRecordID = sourceBook
+            })
+        end
+    end
+    if corruption.suffixID ~= nil then
+        local suffix = interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID)
+        if suffix.onCast ~= nil then
+            print("Running corruption " .. corruption.suffixID .. ".onCast() with spell " .. data.spellID .. ".")
+            suffix.onCast({
+                id = corruption.suffixID,
+                caster = data.caster,
+                spellID = data.spellID,
+                bookRecordID = sourceBook
+            })
+        end
+    end
 end
 
 local function handleSpellApply(data)
@@ -209,6 +250,7 @@ local function handleSpellApply(data)
 
     if sourceBook == nil then
         settings.debugPrint("spell cast, but wasn't learned from a book")
+        return
     end
 
     settings.debugPrint("handleSpellApply from " .. sourceBook)
@@ -224,22 +266,30 @@ local function handleSpellApply(data)
     -- apply them!
     -- id, caster, target, spellID, bookRecordID
     if corruption.prefixID ~= nil then
-        interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID).onApply({
-            id = corruption.prefixID,
-            caster = data.caster,
-            target = data.target,
-            spellID = data.spellID,
-            bookRecordID = sourceBook
-        })
+        local prefix = interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID)
+        if prefix.onApply ~= nil then
+            print("Running corruption " .. corruption.prefixID .. ".onApply() with spell " .. data.spellID .. ".")
+            prefix.onApply({
+                id = corruption.prefixID,
+                caster = data.caster,
+                target = data.target,
+                spellID = data.spellID,
+                bookRecordID = sourceBook
+            })
+        end
     end
     if corruption.suffixID ~= nil then
-        interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID).onApply({
-            id = corruption.suffixID,
-            caster = data.caster,
-            target = data.target,
-            spellID = data.spellID,
-            bookRecordID = sourceBook
-        })
+        local suffix = interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID)
+        if suffix.onApply ~= nil then
+            print("Running corruption " .. corruption.suffixID .. ".onApply() with spell " .. data.spellID .. ".")
+            suffix.onApply({
+                id = corruption.suffixID,
+                caster = data.caster,
+                target = data.target,
+                spellID = data.spellID,
+                bookRecordID = sourceBook
+            })
+        end
     end
 end
 

@@ -12,7 +12,8 @@ local interfaces = require('openmw.interfaces')
 
 interfaces.ErnCorruptionLedger.registerCorruption({
     id = "mycoolthing",
-    onApply = myCorruptionFunction,
+    onApply = myCorruptionOnApplyFunction,
+    onCast = myCorruptionOnCastFunction,
     minimumLevel = 1,
 })
 ```
@@ -26,6 +27,14 @@ interfaces.ErnCorruptionLedger.registerCorruption({
 * `target` - This is a target affected by the spell.
 * `spellID` - This is the spell ID for the base spell this corruption was attached to.
 * `sourceBook` - This is the book record ID that the corrupted spell was cast from.
+
+`onCast` runs in global scope. It is run once per spell cast. It takes in a single argument, which is a table with these fields:
+
+* `id` - This is the id you registered the corruption under.
+* `caster` - This is the caster actor.
+* `spellID` - This is the spell ID for the base spell this corruption was attached to.
+* `sourceBook` - This is the book record ID that the corrupted spell was cast from.
+
 
 `minimumLevel` informs the loot generator to not spawn this corruption until the player level is at least this number. It's optional.
 

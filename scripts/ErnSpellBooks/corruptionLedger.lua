@@ -29,7 +29,12 @@ local corruptionTable = {}
 -- corruptionIDs is list of just IDs.
 local corruptionIDs = {}
 
--- data has .id, .onApply, and .minimumLevel
+-- data has .id, .onApply, .OnCast, and (optionally).minimumLevel
+-- onCast takes in a bag with these fields:
+--      id (string, this is the corruptionID)
+--      caster (actor)
+--      spellID (string)
+--      bookRecordID (string, unique to the specific book)
 -- onApply takes in a bag with these fields:
 --      id (string, this is the corruptionID)
 --      caster (actor)
@@ -37,7 +42,7 @@ local corruptionIDs = {}
 --      spellID (string)
 --      bookRecordID (string, unique to the specific book)
 local function registerCorruption(data)
-    if (data == nil) or (data.id == nil) or (data.id == "") or (data.onApply == nil) then
+    if (data == nil) or (data.id == nil) or (data.id == "") or ((data.onApply == nil) and (data.onCast == nil)) then
         error("RegisterCorruption() bad data")
         return
     end
@@ -55,6 +60,9 @@ local function registerCorruption(data)
 end
 
 local function getCorruption(corruptionID)
+    if (corruptionID == nil) or (corruptionID == "") then
+        return nil
+    end
     -- prefix name
     local corruptionPrefix = localization("corruption_" .. tostring(corruptionID) .. "_prefix")
 
@@ -76,6 +84,7 @@ local function getCorruption(corruptionID)
         description = corruptionDescription,
         id = bag.id,
         onApply = bag.onApply,
+        onCast = bag.onCast,
         minimumLevel = bag.minimumLevel
     }
 end

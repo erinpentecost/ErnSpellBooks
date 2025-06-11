@@ -34,23 +34,20 @@ interfaces.Settings.registerPage {
 local function onActive()
     if settings.debugMode() then
         core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = 'weapon eater',
-            corruption = nil,
+            spellID = 'lightning storm',
+            corruption = {
+                ['prefixID'] = 'style',
+            },
             container = self
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'lightning storm',
             corruption = {
-                ['prefixID'] = 'style',
-                ['suffixID'] = 'normal'
+                ['suffixID'] = 'style'
             },
             container = self
         })
-        core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = spellUtil.getRandomSpells(50, 1)[1].id,
-            corruption = nil,
-            container = self
-        })
+        
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spellUtil.getRandomSpells(3, 1)[1].id,
             corruption = {
