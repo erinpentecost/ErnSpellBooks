@@ -45,6 +45,8 @@ local function createBookRecord(spell, prefixCorruption, suffixCorruption)
     local corruptionName = ""
     local corruptionDescription = ""
     if (prefixCorruption == nil) ~= (suffixCorruption == nil) then
+        -- TODO: allow for only prefix or only suffix
+        -- also need to update localizations for that
         error("createBookRecord(): prefixCorruption and suffixCorruption must both be nil or not nil")
     end
     if prefixCorruption ~= nil then

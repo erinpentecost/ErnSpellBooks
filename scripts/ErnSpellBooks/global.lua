@@ -14,8 +14,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-]]
-local settings = require("scripts.ErnSpellBooks.settings")
+]] local settings = require("scripts.ErnSpellBooks.settings")
 local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
@@ -53,9 +52,13 @@ requireCorruptions()
 
 -- bookTracker should map a couple things:
 -- ["actor_" .. actorID .. "_spell_" .. spellID] -> {bookRecordID}
+-- - this exists so we can tell if a spell has been corrupted
 -- ["book_" .. bookRecordID] -> {spell bag}
+-- - this actually holds the metadata for the spell
+-- - spell bag has: {spellID: <spellID>, corruption: {prefixID: <corruption id>, suffixID: <corruption id>}}
 -- ["spell_" .. spellID .. "_" .. prefixID .. "_" .. suffixID] -> {bookRecordID}
--- spell bag has: {spellID: <spellID>, corruption: {prefixID: <corruption id>, suffixID: <corruption id>}}
+-- - this exists so we can re-use book records for identical spells.
+
 local bookTracker = storage.globalSection(settings.MOD_NAME .. "bookTracker")
 bookTracker:setLifeTime(storage.LIFE_TIME.Temporary)
 
@@ -69,7 +72,7 @@ end
 
 -- createSpellbook creates a spell book.
 -- params: data.spellID, data.corruption, data.container, data.setOwner
-function createSpellbook(data)
+local function createSpellbook(data)
     if (data.spellID == nil) or (data.spellID == "") then
         error("createSpellbook() bad spellID")
     end
@@ -91,16 +94,13 @@ function createSpellbook(data)
     if (data.corruption ~= nil) then
         local prefixID = data.corruption['prefixID']
         local suffixID = data.corruption['suffixID']
-        if (prefixID == nil) or (prefixID == "") then
-            error("createSpellbook() bad prefixID: " .. tostring(prefixID))
+        if (prefixID ~= nil) and (prefixID ~= "") then
+            prefixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['prefixID'])
         end
-        if (suffixID == nil) or (suffixID == "") then
-            error("createSpellbook() bad suffixID: " .. tostring(suffixID))
+        if (suffixID ~= nil) and (suffixID ~= "") then
+            suffixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['suffixID'])
         end
-        prefixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['prefixID'])
-        suffixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['suffixID'])
-
-        spellKey = "spell_" .. data.spellID .. "_" .. prefixCorruption.id .. "_" .. suffixCorruption.id
+        spellKey = "spell_" .. data.spellID .. "_" .. tostring(prefixCorruption.id) .. "_" .. tostring(suffixCorruption.id)
     end
 
     -- If we already made a book for this spell + corruption combo, re-use it.
@@ -150,27 +150,23 @@ local function getCorruptionsFromBookID(sourceBook)
     local spellBag = bookTracker:get("book_" .. sourceBook)
     if spellBag == nil then
         error("missing book entry for " .. sourceBook)
-        return
+        return nil
     end
     local corruptions = spellBag['corruption']
     if (corruptions == nil) then
         -- don't do anything for a normal spell
-        return
+        return nil
     end
-    if (corruptions.prefixID == nil) then
-        error("missing prefixID for " .. sourceBook)
-        return
+    if (corruptions.prefixID == nil) and (corruptions.suffixID == nil) then
+        error("corrupted spell book has no corruptions: " .. sourceBook)
+        return nil
     end
-    if (corruptions.suffixID == nil) then
-        error("missing suffixID for " .. sourceBook)
-        return
-    end
-    settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruptions.prefixID .. " and suffix " ..
-                            corruptions.suffixID)
+    settings.debugPrint(sourceBook .. " contains corruption prefix " .. tostring(corruptions.prefixID) .. " and suffix " ..
+                            tostring(corruptions.suffixID))
     return corruptions
 end
 
-function handleSpellCast(data)
+local function handleSpellCast(data)
     if data.caster == nil then
         error("handleSpellApply caster is nil")
         return
@@ -189,9 +185,10 @@ function handleSpellCast(data)
     settings.debugPrint("handleSpellCast from " .. sourceBook)
 
     -- TODO: forward event to onCast
+    error("not implemented")
 end
 
-function handleSpellApply(data)
+local function handleSpellApply(data)
     if data.caster == nil then
         error("handleSpellApply caster is nil")
         return
@@ -218,24 +215,28 @@ function handleSpellApply(data)
     -- ok, have some corruption ids at this point.
     -- apply them!
     -- id, caster, target, spellID, bookRecordID
-    interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID).onApply({
-        id = corruption.prefixID,
-        caster = data.caster,
-        target = data.target,
-        spellID = data.spellID,
-        bookRecordID = sourceBook,
-    })
-    interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID).onApply({
-        id = corruption.suffixID,
-        caster = data.caster,
-        target = data.target,
-        spellID = data.spellID,
-        bookRecordID = sourceBook,
-    })
+    if corruption.prefixID ~= nil then
+        interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID).onApply({
+            id = corruption.prefixID,
+            caster = data.caster,
+            target = data.target,
+            spellID = data.spellID,
+            bookRecordID = sourceBook
+        })
+    end
+    if corruption.suffixID ~= nil then
+        interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID).onApply({
+            id = corruption.suffixID,
+            caster = data.caster,
+            target = data.target,
+            spellID = data.spellID,
+            bookRecordID = sourceBook
+        })
+    end
 end
 
 -- params: actor, bookRecordID
-function learnSpell(data)
+local function learnSpell(data)
     if data.actor == nil then
         error("learnSpell actor is nil")
     end
@@ -291,6 +292,6 @@ return {
     },
     engineHandlers = {
         onSave = saveState,
-        onLoad = loadState,
+        onLoad = loadState
     }
 }
