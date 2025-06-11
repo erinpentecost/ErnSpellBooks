@@ -5,7 +5,7 @@ Spell Books can contain a huge variety of spells, since they are drawn from all 
 
 Spell Books can spawn on magic-using NPCs or in appropriate containers. A few will also be for sale in any book shop, which will be restocked once per day.
 
-![example](title_image.jpg)
+![a wizard with a spellbook, created with AI](title_image.jpg)
 
 ## Installing
 Extract [main](https://github.com/erinpentecost/ErnSpellBooks/archive/refs/heads/main.zip) to your `mods/` folder.
