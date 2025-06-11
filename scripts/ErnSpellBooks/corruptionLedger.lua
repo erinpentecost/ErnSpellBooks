@@ -23,21 +23,21 @@ if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
 end
 
--- corruptionTable maps a corruptionID to a bag with .id, .func, and .minimumLevel.
+-- corruptionTable maps a corruptionID to a bag with .id, .onApply, and .minimumLevel.
 -- minimumLevel informs when it should drop in random tables. This is an integer.
 local corruptionTable = {}
 -- corruptionIDs is list of just IDs.
 local corruptionIDs = {}
 
--- data has .id, .func, and .minimumLevel
--- func takes in a bag with these fields:
+-- data has .id, .onApply, and .minimumLevel
+-- onApply takes in a bag with these fields:
 --      id (string, this is the corruptionID)
 --      caster (actor)
 --      target (actor)
 --      spellID (string)
 --      bookRecordID (string, unique to the specific book)
 local function registerCorruption(data)
-    if (data == nil) or (data.id == nil) or (data.id == "") or (data.func == nil) then
+    if (data == nil) or (data.id == nil) or (data.id == "") or (data.onApply == nil) then
         error("RegisterCorruption() bad data")
         return
     end
@@ -75,7 +75,7 @@ local function getCorruption(corruptionID)
         suffix = corruptionSuffix,
         description = corruptionDescription,
         id = bag.id,
-        func = bag.func,
+        onApply = bag.onApply,
         minimumLevel = bag.minimumLevel
     }
 end

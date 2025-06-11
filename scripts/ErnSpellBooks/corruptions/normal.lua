@@ -26,7 +26,7 @@ if require("openmw.core").API_REVISION < 62 then
 end
 
 -- The function that actually does the thing.
--- data has fields: id, caster, target, spellID, sourceBook, frameID
+-- data has fields: id, caster, target, spellID, sourceBook
 local function applyCorruption(data)
     -- This is a no-op!
 end
@@ -34,5 +34,5 @@ end
 -- Register the corruption in the ledger.
 interfaces.ErnCorruptionLedger.registerCorruption({
     id = "normal",
-    func = applyCorruption,
+    onApply = applyCorruption,
 })

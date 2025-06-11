@@ -43,7 +43,7 @@ function(data)
 end)
 
 -- The function that actually does the thing.
--- data has fields: id, caster, target, spellID, sourceBook, frameID
+-- data has fields: id, caster, target, spellID, sourceBook
 local function applyCorruption(data)
     -- don't do anything if they already have a hat
     local currentHat = types.Actor.getEquipment(data.target, types.Actor.EQUIPMENT_SLOT.Helmet)
@@ -74,6 +74,6 @@ end
 -- Register the corruption in the ledger.
 interfaces.ErnCorruptionLedger.registerCorruption({
     id = "style",
-    func = applyCorruption,
+    onApply = applyCorruption,
     minimumLevel = 1
 })
