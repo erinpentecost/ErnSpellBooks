@@ -24,8 +24,8 @@ content=ErnSpellBooks.omwscripts
 Feel free to submit a PR to the [repo](https://github.com/erinpentecost/ErnSpellBooks) provided:
 
 * You assert that all code submitted is your own work.
-* You relinquish ownership of the code upon merge to `main`.
-* You acknowledge your code will be governed by the project license.
+* You agree your code will be governed by the project license, which is the AGPL.
+* You agree that you can't demand your contributions be removed.
 
 ### omwaddon
 The omwaddon contains these entries:
