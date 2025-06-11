@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local world = require('openmw.world')
 local types = require("openmw.types")
 local core = require("openmw.core")
+local spellUtil = require("scripts.ErnSpellBooks.spellUtil")
 local storage = require('openmw.storage')
 local books = require("scripts.ErnSpellBooks.books")
 local interfaces = require('openmw.interfaces')
@@ -100,7 +101,8 @@ local function createSpellbook(data)
         if (suffixID ~= nil) and (suffixID ~= "") then
             suffixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['suffixID'])
         end
-        spellKey = "spell_" .. data.spellID .. "_" .. tostring(prefixCorruption.id) .. "_" .. tostring(suffixCorruption.id)
+        spellKey = "spell_" .. data.spellID .. "_" .. tostring(prefixCorruption.id) .. "_" ..
+                       tostring(suffixCorruption.id)
     end
 
     -- If we already made a book for this spell + corruption combo, re-use it.
@@ -161,8 +163,9 @@ local function getCorruptionsFromBookID(sourceBook)
         error("corrupted spell book has no corruptions: " .. sourceBook)
         return nil
     end
-    settings.debugPrint(sourceBook .. " contains corruption prefix " .. tostring(corruptions.prefixID) .. " and suffix " ..
-                            tostring(corruptions.suffixID))
+    settings.debugPrint(
+        sourceBook .. " contains corruption prefix " .. tostring(corruptions.prefixID) .. " and suffix " ..
+            tostring(corruptions.suffixID))
     return corruptions
 end
 
@@ -211,6 +214,11 @@ local function handleSpellApply(data)
     settings.debugPrint("handleSpellApply from " .. sourceBook)
 
     local corruption = getCorruptionsFromBookID(sourceBook)
+
+    if corruption == nil then
+        -- not corrupted, don't do anything else.
+        return
+    end
 
     -- ok, have some corruption ids at this point.
     -- apply them!
@@ -266,18 +274,19 @@ local function learnSpell(data)
     actorSpells:add(spell)
 
     -- notify player
-    local prefixName = nil
-    local suffixName = nil
-    if spellBag['corruption'] ~= nil then
-        prefixName = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['prefixID']).prefix
-        suffixName = interfaces.ErnCorruptionLedger.getCorruption(spellBag['corruption']['suffixID']).suffix
+    local spellName = ""
+    if spellBag['corruption'] == nil then
+        spellName = spellUtil.getSpellName(spell, nil, nil)
+    else
+        spellName = spellUtil.getSpellName(spell, interfaces.ErnCorruptionLedger
+            .getCorruption(spellBag['corruption']['prefixID']), interfaces.ErnCorruptionLedger
+            .getCorruption(spellBag['corruption']['suffixID']))
     end
+
     if (data.actor.type == types.Player) then
         -- data.spellName, data.corruptionName
         data.actor:sendEvent("ernShowLearnMessage", {
-            spellName = spell.name,
-            corruptionPrefix = prefixName,
-            corruptionSuffix = suffixName,
+            spellName = spellName,
             spellID = spell.id
         })
     end

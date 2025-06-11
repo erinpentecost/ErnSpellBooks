@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local world = require("openmw.world")
 local types = require("openmw.types")
 local settings = require("scripts.ErnSpellBooks.settings")
+local spellUtil = require("scripts.ErnSpellBooks.spellUtil")
 local core = require("openmw.core")
 local localization = core.l10n(settings.MOD_NAME)
 
@@ -38,37 +39,34 @@ local function createBookRecord(spell, prefixCorruption, suffixCorruption)
         error("createBookRecord(): spell is nil")
     end
 
-    local bookName = ""
+    local spellName = spellUtil.getSpellName(spell, prefixCorruption, suffixCorruption)
+
+    local bookName = localization("book_name", {spellName = spellName})
+
     local bookBody = ""
 
     local corruptionCostMod = 0
-    local corruptionName = ""
-    local corruptionDescription = ""
-    if (prefixCorruption == nil) ~= (suffixCorruption == nil) then
-        -- TODO: allow for only prefix or only suffix
-        -- also need to update localizations for that
-        error("createBookRecord(): prefixCorruption and suffixCorruption must both be nil or not nil")
-    end
+
+    local prefixDescription = "nil"
     if prefixCorruption ~= nil then
-        corruptionCostMod = math.random(5, 100)
-        bookName = localization("bookCorrupt_name", {
-            spellName = spell.name,
-            corruptionPrefix = prefixCorruption.prefix,
-            corruptionSuffix = suffixCorruption.suffix
-        })
+        corruptionCostMod = (3 * prefixCorruption.minimumLevel) + math.random(5, 10)
+        prefixDescription = prefixCorruption.description
+    end
+    local suffixDescription = "nil"
+    if suffixCorruption ~= nil then
+        corruptionCostMod = (3 * suffixCorruption.minimumLevel) + math.random(5, 10)
+        suffixDescription = suffixCorruption.description
+    end
+
+    if (prefixCorruption ~= nil) or (suffixCorruption ~= nil) then
         bookBody = localization("bookCorrupt_body", {
-            spellName = spell.name,
-            corruptionPrefix = prefixCorruption.prefix,
-            corruptionSuffix = suffixCorruption.suffix,
-            corruptionPrefixDescription = prefixCorruption.description,
-            corruptionSuffixDescription = suffixCorruption.description
+            spellName = spellName,
+            corruptionPrefixDescription = prefixDescription,
+            corruptionSuffixDescription = suffixDescription
         })
     else
-        bookName = localization("book_name", {
-            spellName = spell.name
-        })
         bookBody = localization("book_body", {
-            spellName = spell.name
+            spellName = spellName,
         })
     end
 

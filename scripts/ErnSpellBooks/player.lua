@@ -69,11 +69,9 @@ local function showLearnMessage(data)
         error("showLearnMessage() bad spellName")
         return
     end
-    if data.corruptionPrefix == nil then
-        ui.showMessage(localization("learnMessage", data))
-    else
-        ui.showMessage(localization("learnCorruptMessage", data))
-    end
+
+    ui.showMessage(localization("learnMessage", data))
+
     -- equip the spell, too.
     local spell = core.magic.spells.records[data.spellID]
     types.Actor.setSelectedSpell(self, spell)

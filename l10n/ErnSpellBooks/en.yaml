@@ -17,20 +17,24 @@ debugMode_name: "Debug Mode"
 debugMode_description: "Print debug messages."
 
 learnMessage: "You learned {spellName}!"
-learnCorruptMessage: "You learned {corruptionPrefix} {spellName} of {corruptionSuffix}!"
 
 # Spell book content. Shoutout to https://www.tamriel-rebuilt.org/content/guidelines-literature
-book_name: "Book of {spellName}"
-book_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName}</FONT></DIV><P>This spellbook contains {spellName}. Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
+spell_name_with_prefix: "{corruptionPrefix} {spellName}"
+spell_name_with_suffix: "{spellName} of {corruptionSuffix}"
+spell_name_with_both: "{corruptionPrefix} {spellName} of {corruptionSuffix}"
 
-bookCorrupt_name: "Book of {corruptionPrefix} {spellName} of {corruptionSuffix}"
-bookCorrupt_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{corruptionPrefix} {spellName} of {corruptionSuffix}</FONT></DIV><P>This spellbook contains a corrupted version of {spellName} that has these additional effects:<P>{corruptionPrefixDescription}<P>{corruptionSuffixDescription}<P> Use it to learn it. This will replace any other versions of this spell that you know.<BR>'
+book_name: "Book of {spellName}"
+
+book_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName}</FONT></DIV><P>This spellbook contains {spellName}. Cast it to learn it. This will replace any other versions of this spell that you know.<BR>'
+bookCorrupt_body: '<DIV ALIGN="CENTER"><FONT FACE="Daedric">{spellName}</FONT></DIV><P>This spellbook contains a corrupted version of {spellName} that has these additional effects:<P>{corruptionPrefixDescription}<P>{corruptionSuffixDescription}<P> Cast it to learn it. This will replace any other versions of this spell that you know.<BR>'
 
 # Names for all the corruption effects.
 # The second token in the name MUST match the corruptionID.
 # Prefix is the name to use when it appears before the spell name.
 # Suffix is the name to use when it appears after the spell name.
 # Description appears inside the spell book when read.
+corruption_nil_description: ""
+
 corruption_style_prefix: "Stylish"
 corruption_style_suffix: "Style"
 corruption_style_description: "Summon a nice hat to wear on target."

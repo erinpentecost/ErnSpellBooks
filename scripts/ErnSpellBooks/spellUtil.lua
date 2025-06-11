@@ -18,10 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 local types = require("openmw.types")
 local settings = require("scripts.ErnSpellBooks.settings")
 local core = require("openmw.core")
+local core = require("openmw.core")
+local localization = core.l10n(settings.MOD_NAME)
 
--- getValidSpell returns the Spell object, if it's valid.
--- otherwise, returns nil.
-local function getValidSpell(spellOrSpellID)
+local function resolveSpellID(spellOrSpellID)
     if spellOrSpellID == nil then
         error("validSpell() spell is nil")
         return nil
@@ -34,6 +34,13 @@ local function getValidSpell(spellOrSpellID)
             error("getValidSpell() bad spell id: " .. tostring(spellOrSpellID))
         end
     end
+    return spell
+end
+
+-- getValidSpell returns the Spell object, if it's valid.
+-- otherwise, returns nil.
+local function getValidSpell(spellOrSpellID)
+    local spell = resolveSpellID(spellOrSpellID)
 
     if spell == nil then
         return nil
@@ -86,18 +93,7 @@ local function getRandomSpells(playerLevel, count)
 end
 
 local function getSpellDuration(spellOrSpellID)
-    if spellOrSpellID == nil then
-        error("validSpell() spell is nil")
-        return 0
-    end
-    local spell = spellOrSpellID
-    if spellOrSpellID.id == nil then
-        -- https://openmw.readthedocs.io/en/latest/reference/lua-scripting/openmw_core.html##(Spell)
-        spell = core.magic.spells.records[tostring(spellOrSpellID)]
-        if spell == nil then
-            error("getValidSpell() bad spell id: " .. tostring(spellOrSpellID))
-        end
-    end
+    local spell = resolveSpellID(spellOrSpellID)
 
     if spell == nil then
         return 0
@@ -110,8 +106,32 @@ local function getSpellDuration(spellOrSpellID)
     return maxDuration
 end
 
+local function getSpellName(spellOrSpellID, prefixCorruption, suffixCorruption)
+    local spell = resolveSpellID(spellOrSpellID)
+    if (prefixCorruption == nil) and (suffixCorruption == nil) then
+        return spell.name
+    elseif (prefixCorruption ~= nil) and (suffixCorruption == nil) then
+        return localization("spell_name_with_prefix", {
+            spellName = spell.name,
+            corruptionPrefix = prefixCorruption.prefix,
+        })
+    elseif (prefixCorruption == nil) and (suffixCorruption ~= nil) then
+        return localization("spell_name_with_suffix", {
+            spellName = spell.name,
+            corruptionSuffix = suffixCorruption.suffix,
+        })
+    else
+        return localization("spell_name_with_both", {
+            spellName = spell.name,
+            corruptionPrefix = prefixCorruption.prefix,
+            corruptionSuffix = suffixCorruption.suffix,
+        })
+    end
+end
+
 return {
     getValidSpell = getValidSpell,
     getRandomSpells = getRandomSpells,
     getSpellDuration = getSpellDuration,
+    getSpellName = getSpellName,
 }
