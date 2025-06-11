@@ -37,8 +37,12 @@ local corruptionIDs = {}
 --      spellID (string)
 --      bookRecordID (string, unique to the specific book)
 local function registerCorruption(data)
-    if (data == nil) or (data.id == nil) or (data.func == nil) then
+    if (data == nil) or (data.id == nil) or (data.id == "") or (data.func == nil) then
         error("RegisterCorruption() bad data")
+        return
+    end
+    if corruptionTable[data.id] ~= nil then
+        error("re-registering corruption handler forbidden: " .. data.id)
         return
     end
     -- minimumLevel is optional
@@ -76,7 +80,7 @@ local function getCorruption(corruptionID)
     }
 end
 
-local function getRandomCorruptions(playerLevel, count)
+local function getRandomCorruptionIDs(playerLevel, count)
     local randList = {}
     for _, id in pairs(corruptionIDs) do
         local corruption = corruptionTable[id]
@@ -85,8 +89,8 @@ local function getRandomCorruptions(playerLevel, count)
         end
         if corruption.minimumLevel <= playerLevel then
             -- get random index to insert into. 1 to size+1.
-            local insertAt = math.random(1, 1 + #corruptionIDs)
-            table.insert(randList, insertAt, corruption)
+            local insertAt = math.random(1, 1 + #randList)
+            table.insert(randList, insertAt, id)
             -- >>>> this is getting hit twice <<<<
             settings.debugPrint("getRandomCorruptions() inserted " .. corruption.id)
         end
@@ -103,6 +107,6 @@ return {
         version = 1,
         registerCorruption = registerCorruption,
         getCorruption = getCorruption,
-        getRandomCorruptions = getRandomCorruptions,
+        getRandomCorruptionIDs = getRandomCorruptionIDs,
     }
 }

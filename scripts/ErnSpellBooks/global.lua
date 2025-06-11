@@ -91,11 +91,13 @@ function createSpellbook(data)
     local prefixCorruption = nil
     local suffixCorruption = nil
     if (data.corruption ~= nil) then
-        if (data.corruption['suffixID'] == nil) or (data.corruption['suffixID'] == "") then
-            error("createSpellbook() bad suffixID")
+        local prefixID = data.corruption['prefixID']
+        local suffixID = data.corruption['suffixID']
+        if (prefixID == nil) or (prefixID == "") then
+            error("createSpellbook() bad prefixID: " .. tostring(prefixID))
         end
-        if (data.corruption['prefixID'] == nil) or (data.corruption['prefixID'] == "") then
-            error("createSpellbook() bad prefixID")
+        if (suffixID == nil) or (suffixID == "") then
+            error("createSpellbook() bad suffixID: " .. tostring(suffixID))
         end
         prefixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['prefixID'])
         suffixCorruption = interfaces.ErnCorruptionLedger.getCorruption(data.corruption['suffixID'])

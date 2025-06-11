@@ -109,7 +109,7 @@ end
 local function getRandomCorruption()
     local corruption = nil
     if settings.corruptionChance() > math.random(0, 99) then
-        local randList = interfaces.ErnCorruptionLedger.getRandomCorruptions(getHighestPlayerLevel(), 2)
+        local randList = interfaces.ErnCorruptionLedger.getRandomCorruptionIDs(getHighestPlayerLevel(), 2)
         if randList == nil then
             error("got a nil corruption list!")
         end
@@ -118,8 +118,8 @@ local function getRandomCorruption()
             return nil
         end
         corruption = {
-            ['prefixID'] = randList[0].id,
-            ['suffixID'] = randList[1].id,
+            ['prefixID'] = randList[1],
+            ['suffixID'] = randList[2],
         }
     end
     return corruption
