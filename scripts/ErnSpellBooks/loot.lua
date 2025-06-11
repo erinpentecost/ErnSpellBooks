@@ -101,7 +101,7 @@ local function shuffle(collection)
         -- get random index to insert into. 1 to size+1.
         -- # is a special op that gets size
         local insertAt = math.random(1, 1 + #randList)
-        table.insert(randList, insertAt, collection)
+        table.insert(randList, insertAt, item)
     end
     return randList
 end

@@ -26,6 +26,8 @@ end
 -- corruptionTable maps a corruptionID to a bag with .id, .func, and .minimumLevel.
 -- minimumLevel informs when it should drop in random tables. This is an integer.
 local corruptionTable = {}
+-- corruptionIDs is list of just IDs.
+local corruptionIDs = {}
 
 -- data has .id, .func, and .minimumLevel
 -- func takes in a bag with these fields:
@@ -45,6 +47,7 @@ local function registerCorruption(data)
     end
     settings.debugPrint("Registered " .. data.id .. " corruption handler.")
     corruptionTable[data.id] = data
+    table.insert(corruptionIDs, data.id)
 end
 
 local function getCorruption(corruptionID)
@@ -73,11 +76,26 @@ local function getCorruption(corruptionID)
     }
 end
 
+local function getRandomCorruptions(playerLevel, count)
+    local randList = {}
+    for _, id in pairs(corruptionIDs) do
+        local corruption = corruptionTable[id]
+        if corruption.minimumLevel >= playerLevel then
+            -- get random index to insert into. 1 to size+1.
+            -- # is a special op that gets size
+            local insertAt = math.random(1, 1 + #corruptionIDs)
+            table.insert(randList, insertAt, corruption)
+        end
+    end
+    return {table.unpack(randList, 1, count)}
+end
+
 return {
     interfaceName = "ErnCorruptionLedger",
     interface = {
         version = 1,
         registerCorruption = registerCorruption,
-        getCorruption = getCorruption
+        getCorruption = getCorruption,
+        getRandomCorruptions = getRandomCorruptions,
     }
 }

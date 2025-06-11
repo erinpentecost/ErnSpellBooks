@@ -34,5 +34,4 @@ end
 interfaces.ErnCorruptionLedger.registerCorruption({
     id = "normal",
     func = applyCorruption,
-    minimumLevel = 0
 })
