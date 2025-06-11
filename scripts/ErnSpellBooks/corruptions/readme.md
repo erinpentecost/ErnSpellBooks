@@ -1,4 +1,6 @@
-# Corruptions
+# Development Notes
+
+## Corruptions
 
 Any `.lua` files in this folder will automatically be run in the global scope before the mod finishes starting.
 
@@ -28,7 +30,7 @@ interfaces.ErnCorruptionLedger.registerCorruption({
 
 `minimumLevel` informs the loot generator to not spawn this corruption until the player level is at least this number. It's optional.
 
-## Localization
+### Localization
 
 You also need to add these fields to the localization file for every corruption you add:
 

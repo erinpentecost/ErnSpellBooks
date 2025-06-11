@@ -42,13 +42,11 @@ local function requireCorruptions()
     -- these are namespaced by their filename.
     -- workaround for a bunch of restrictions.
     for fileName in vfs.pathsWithPrefix("scripts\\" .. settings.MOD_NAME .. "\\corruptions") do
-        settings.debugPrint("found " .. fileName)
-        local baseName = string.lower(string.match(fileName, '(%a+)[.]lua'))
-        settings.debugPrint("requiring " .. baseName)
-        require("scripts.ErnSpellBooks.corruptions." .. baseName)
-        -- for id, func in pairs(corruptionHandler.corruptions) do
-        --    registerCorruption({id = (baseName .. "_" .. id), func = func})
-        -- end
+        local baseName = string.match(fileName, '(%a+)[.]lua')
+        if baseName ~= nil then
+            settings.debugPrint("requiring " .. baseName)
+            require("scripts.ErnSpellBooks.corruptions." .. string.lower(baseName))
+        end
     end
 end
 requireCorruptions()

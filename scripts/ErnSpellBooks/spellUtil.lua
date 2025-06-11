@@ -82,10 +82,36 @@ local function getRandomSpells(playerLevel, count)
         end
     end
 
-    return {table.unpack(randList, 1, 1+count)}
+    return {table.unpack(randList, 1, 1 + count)}
+end
+
+local function getSpellDuration(spellOrSpellID)
+    if spellOrSpellID == nil then
+        error("validSpell() spell is nil")
+        return 0
+    end
+    local spell = spellOrSpellID
+    if spellOrSpellID.id == nil then
+        -- https://openmw.readthedocs.io/en/latest/reference/lua-scripting/openmw_core.html##(Spell)
+        spell = core.magic.spells.records[tostring(spellOrSpellID)]
+        if spell == nil then
+            error("getValidSpell() bad spell id: " .. tostring(spellOrSpellID))
+        end
+    end
+
+    if spell == nil then
+        return 0
+    end
+
+    local maxDuration = 0
+    for _, effect in ipairs(spell.effects) do
+        maxDuration = math.max(maxDuration, effect.duration)
+    end
+    return maxDuration
 end
 
 return {
     getValidSpell = getValidSpell,
-    getRandomSpells = getRandomSpells
+    getRandomSpells = getRandomSpells,
+    getSpellDuration = getSpellDuration,
 }

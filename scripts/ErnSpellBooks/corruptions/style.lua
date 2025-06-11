@@ -20,12 +20,19 @@ local core = require("openmw.core")
 local settings = require("scripts.ErnSpellBooks.settings")
 local interfaces = require('openmw.interfaces')
 local types = require("openmw.types")
+local spellUtil = require("scripts.ErnSpellBooks.spellUtil")
+local async = require('openmw.async')
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
 end
 
 local stylishHatRecordID = "fur_colovian_helm"
+
+local deleteHatCallback = async:registerTimerCallback('ernDeleteHatCallback',
+function(data)
+    data:remove()
+end)
 
 -- The function that actually does the thing.
 -- data has fields: id, caster, target, spellID, sourceBook, frameID
@@ -46,6 +53,10 @@ local function applyCorruption(data)
         actor = data.target,
         force = true
     })
+
+    -- delete the hat when the spell expires (or after 5 sec)
+    local duration = math.max(5, spellUtil.getSpellDuration(data.spellID))
+    async:newSimulationTimer(duration, deleteHatCallback, hatInstance)
 end
 
 -- Register the corruption in the ledger.

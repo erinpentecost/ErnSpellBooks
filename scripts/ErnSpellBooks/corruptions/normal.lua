@@ -20,6 +20,7 @@ local core = require("openmw.core")
 local settings = require("scripts.ErnSpellBooks.settings")
 local interfaces = require('openmw.interfaces')
 
+
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
 end
