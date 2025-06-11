@@ -41,14 +41,14 @@ local function requireCorruptions()
     -- read all built-in corruption scripts and register them.
     -- these are namespaced by their filename.
     -- workaround for a bunch of restrictions.
-    for fileName in vfs.pathsWithPrefix("scripts\\"..settings.MOD_NAME.."\\corruptions") do
+    for fileName in vfs.pathsWithPrefix("scripts\\" .. settings.MOD_NAME .. "\\corruptions") do
         settings.debugPrint("found " .. fileName)
         local baseName = string.lower(string.match(fileName, '(%a+)[.]lua'))
         settings.debugPrint("requiring " .. baseName)
         require("scripts.ErnSpellBooks.corruptions." .. baseName)
-        --for id, func in pairs(corruptionHandler.corruptions) do
+        -- for id, func in pairs(corruptionHandler.corruptions) do
         --    registerCorruption({id = (baseName .. "_" .. id), func = func})
-        --end
+        -- end
     end
 end
 requireCorruptions()
@@ -81,7 +81,7 @@ function createSpellbook(data)
     end
 
     -- make sure spell is valid.
-    local spell = core.magic.spells.records[data.spellID]  -- get by id
+    local spell = core.magic.spells.records[data.spellID] -- get by id
     if spell == nil then
         error("invalid spell: " .. data.spellID)
         return
@@ -102,27 +102,26 @@ function createSpellbook(data)
 
         spellKey = "spell_" .. data.spellID .. "_" .. prefixCorruption.id .. "_" .. suffixCorruption.id
     end
-    
 
     -- If we already made a book for this spell + corruption combo, re-use it.
     local bookRecord = nil
     local reusedBook = bookTracker:get(spellKey)
     if reusedBook ~= nil then
-        settings.debugPrint("re-using book record for spell "..spellKey.. ": " .. reusedBook)
+        settings.debugPrint("re-using book record for spell " .. spellKey .. ": " .. reusedBook)
         bookRecord = types.Book.record(reusedBook)
         if bookRecord == nil then
             error("expected a book record " .. reusedBook .. " to exist")
             return
         end
     else
-        settings.debugPrint("making a new book record for spell "..spellKey)
+        settings.debugPrint("making a new book record for spell " .. spellKey)
         bookRecord = books.createBookRecord(spell, prefixCorruption, suffixCorruption)
         bookTracker:set(spellKey, bookRecord.id)
     end
 
     local bookInstance = world.createObject(bookRecord.id)
 
-    settings.debugPrint("creating " .. bookRecord.name  .. " on " .. data.container.id)
+    settings.debugPrint("creating " .. bookRecord.name .. " on " .. data.container.id)
 
     -- save what the book is attached to.
     bookTracker:set("book_" .. bookRecord.id, {
@@ -184,23 +183,24 @@ function handleSpellCast(data)
         error("missing suffixID for " .. sourceBook)
         return
     end
-    settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruption.prefixID .. " and suffix " .. corruption.suffixID)
+    settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruption.prefixID .. " and suffix " ..
+                            corruption.suffixID)
     -- ok, have some corruption ids at this point.
     -- apply them!
     -- id, caster, target, spellID, bookRecordID
     interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID).func({
-        id=corruption.prefixID,
-        caster=data.caster,
-        target=data.target,
-        spellID=spellID,
-        bookRecordID=sourceBook,
+        id = corruption.prefixID,
+        caster = data.caster,
+        target = data.target,
+        spellID = data.spellID,
+        bookRecordID = sourceBook
     })
     interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID).func({
-        id=corruption.suffixID,
-        caster=data.caster,
-        target=data.target,
-        spellID=spellID,
-        bookRecordID=sourceBook,
+        id = corruption.suffixID,
+        caster = data.caster,
+        target = data.target,
+        spellID = data.spellID,
+        bookRecordID = sourceBook
     })
 end
 
@@ -233,7 +233,6 @@ function learnSpell(data)
     -- actually add the spell to known spells
     local actorSpells = types.Actor.spells(data.actor)
     actorSpells:add(spell)
-    
 
     -- notify player
     local prefixName = nil
@@ -245,14 +244,13 @@ function learnSpell(data)
     if (data.actor.type == types.Player) then
         -- data.spellName, data.corruptionName
         data.actor:sendEvent("ernShowLearnMessage", {
-            spellName=spell.name,
-            corruptionPrefix=prefixName,
-            corruptionSuffix=suffixName,
-            spellID=spell.id,
+            spellName = spell.name,
+            corruptionPrefix = prefixName,
+            corruptionSuffix = suffixName,
+            spellID = spell.id
         })
     end
 end
-
 
 return {
     eventHandlers = {

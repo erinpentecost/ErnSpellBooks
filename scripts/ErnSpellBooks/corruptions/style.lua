@@ -19,25 +19,38 @@ local world = require('openmw.world')
 local core = require("openmw.core")
 local settings = require("scripts.ErnSpellBooks.settings")
 local interfaces = require('openmw.interfaces')
+local types = require("openmw.types")
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
 end
 
+local stylishHatRecordID = "fur_colovian_helm"
+
 -- The function that actually does the thing.
 -- data has fields: id, caster, target, spellID, sourceBook
 local function applyCorruption(data)
+    -- don't do anything if they already have a hat
+    local currentHat = types.Actor.getEquipment(data.target, types.Actor.EQUIPMENT_SLOT.Helmet)
+    if (currentHat ~= nil) and (currentHat.recordId == stylishHatRecordID) then
+        settings.debugPrint("already has a good hat")
+        return
+    end
+
     -- create a fur_colovian_helm and make the target wear it.
     -- this is safe for beast races.
-    local hatInstance = world.createObject("fur_colovian_helm")
+    local hatInstance = world.createObject(stylishHatRecordID)
     hatInstance:moveInto(data.target)
-    core.sendGlobalEvent('UseItem',
-        {object = hatInstance, actor = data.target, force = true})
+    core.sendGlobalEvent('UseItem', {
+        object = hatInstance,
+        actor = data.target,
+        force = true
+    })
 end
 
 -- Register the corruption in the ledger.
 interfaces.ErnCorruptionLedger.registerCorruption({
-    id="style",
-    func=applyCorruption,
-    minimumLevel=0,
+    id = "style",
+    func = applyCorruption,
+    minimumLevel = 0
 })

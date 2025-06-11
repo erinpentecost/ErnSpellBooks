@@ -21,28 +21,21 @@ local settings = require("scripts.ErnSpellBooks.settings")
 local core = require("openmw.core")
 local localization = core.l10n(settings.MOD_NAME)
 
-local bookShapes = {
-    {
-        ['icon'] = "icons\\m\\tx_book_04.dds",
-        ['model'] = "meshes\\m\\text_octavo_05.nif",
-    },
-    {
-        ['icon'] = "icons\\m\\tx_octavo_03.dds",
-        ['model'] = "meshes\\m\\text_octavo_03.nif",
-    },
-    {
-        ['icon'] = "icons\\m\\tx_folio_03.dds",
-        ['model'] = "meshes\\m\\text_folio_03.nif",
-    },
-}
+local bookShapes = {{
+    ['icon'] = "icons\\m\\tx_book_04.dds",
+    ['model'] = "meshes\\m\\text_octavo_05.nif"
+}, {
+    ['icon'] = "icons\\m\\tx_octavo_03.dds",
+    ['model'] = "meshes\\m\\text_octavo_03.nif"
+}, {
+    ['icon'] = "icons\\m\\tx_folio_03.dds",
+    ['model'] = "meshes\\m\\text_folio_03.nif"
+}}
 
 -- spell is a core.Magic.Spell.
 local function createBookRecord(spell, prefixCorruption, suffixCorruption)
     if spell == nil then
         error("createBookRecord(): spell is nil")
-    end
-    if (corruption ~= nil) and (corruption.suffixID == nil) then
-        error("createBookRecord(): corruption.suffixID is nil")
     end
 
     local bookName = ""
@@ -56,22 +49,30 @@ local function createBookRecord(spell, prefixCorruption, suffixCorruption)
     end
     if prefixCorruption ~= nil then
         corruptionCostMod = math.random(5, 100)
-        bookName = localization("bookCorrupt_name", {spellName=spell.name, corruptionPrefix=prefixCorruption.prefix, corruptionSuffix=suffixCorruption.suffix})
+        bookName = localization("bookCorrupt_name", {
+            spellName = spell.name,
+            corruptionPrefix = prefixCorruption.prefix,
+            corruptionSuffix = suffixCorruption.suffix
+        })
         bookBody = localization("bookCorrupt_body", {
-            spellName=spell.name,
-            corruptionPrefix=prefixCorruption.prefix,
-            corruptionSuffix=suffixCorruption.suffix,
-            corruptionPrefixDescription=prefixCorruption.description, 
-            corruptionSuffixDescription=suffixCorruption.description,
+            spellName = spell.name,
+            corruptionPrefix = prefixCorruption.prefix,
+            corruptionSuffix = suffixCorruption.suffix,
+            corruptionPrefixDescription = prefixCorruption.description,
+            corruptionSuffixDescription = suffixCorruption.description
         })
     else
-        bookName = localization("book_name", {spellName=spell.name})
-        bookBody = localization("book_body", {spellName=spell.name})
+        bookName = localization("book_name", {
+            spellName = spell.name
+        })
+        bookBody = localization("book_body", {
+            spellName = spell.name
+        })
     end
 
     -- ErnSpellBooks_LearnEnchantment
-    shape = bookShapes[math.random(1, 3)]
-    recordFields = {
+    local shape = bookShapes[math.random(1, 3)]
+    local recordFields = {
         enchant = "ErnSpellBooks_LearnEnchantment",
         enchantCapacity = 1,
         icon = shape["icon"],
@@ -80,10 +81,11 @@ local function createBookRecord(spell, prefixCorruption, suffixCorruption)
         name = bookName,
         skill = nil,
         text = bookBody,
-        value = math.max(1, settings.costScale() * math.ceil(math.min(3000, 20 + corruptionCostMod + (spell.cost ^ 1.5)))),
-        weight = math.random(2, 4),
+        value = math.max(1,
+            settings.costScale() * math.ceil(math.min(3000, 20 + corruptionCostMod + (spell.cost ^ 1.5)))),
+        weight = math.random(2, 4)
     }
-    draftRecord = types.Book.createRecordDraft(recordFields)
+    local draftRecord = types.Book.createRecordDraft(recordFields)
     return world.createRecord(draftRecord)
 end
 

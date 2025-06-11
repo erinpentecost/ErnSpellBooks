@@ -32,7 +32,7 @@ end
 
 -- Register the corruption in the ledger.
 interfaces.ErnCorruptionLedger.registerCorruption({
-    id="normal",
-    func=applyCorruption,
-    minimumLevel=0,
+    id = "normal",
+    func = applyCorruption,
+    minimumLevel = 0
 })

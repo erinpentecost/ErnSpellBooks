@@ -53,7 +53,7 @@ local wizardClasses = {
     ["priest"] = true,
     ["warlock"] = true,
     ["wise woman"] = true,
-    ["witch"] = true,
+    ["witch"] = true
 }
 
 local function isBookSeller(npcInstance)
@@ -78,7 +78,7 @@ local function hasScrolls(containerInstance)
     for _, item in ipairs(inventory:getAll(types.Book)) do
         local bookRecord = types.Book.record(item)
         if bookRecord.enchant ~= nil then
-            settings.debugPrint("found scroll ".. bookRecord.name .." in " .. containerInstance.id)
+            settings.debugPrint("found scroll " .. bookRecord.name .. " in " .. containerInstance.id)
             return true
         end
     end
@@ -96,11 +96,11 @@ local function getHighestPlayerLevel()
 end
 
 local function shuffle(collection)
-    randList = {}
+    local randList = {}
     for _, item in pairs(collection) do
         -- get random index to insert into. 1 to size+1.
         -- # is a special op that gets size
-        insertAt = math.random(1, 1+#randList) 
+        local insertAt = math.random(1, 1 + #randList)
         table.insert(randList, insertAt, collection)
     end
     return randList
@@ -110,8 +110,7 @@ local function deleteBooksFromShop(npcInstance)
     local books = types.Actor.inventory(npcInstance):getAll(types.Book)
     for _, book in ipairs(books) do
         local bookRecord = types.Book.record(book)
-        if (bookRecord.enchant ~= nil) and
-        (string.lower(bookRecord.enchant) == "ernspellbooks_learnenchantment") then
+        if (bookRecord.enchant ~= nil) and (string.lower(bookRecord.enchant) == "ernspellbooks_learnenchantment") then
             settings.debugPrint("deleting book from shopkeeper: " .. bookRecord.name)
             book:remove()
         end
@@ -119,12 +118,12 @@ local function deleteBooksFromShop(npcInstance)
 end
 
 local function insertIntoShop(npcInstance)
-    local spellList = spellUtil.getRandomSpells(getHighestPlayerLevel(), math.random(1,4))
+    local spellList = spellUtil.getRandomSpells(getHighestPlayerLevel(), math.random(1, 4))
     for _, spell in ipairs(spellList) do
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spell.id,
             corruption = nil,
-            container = npcInstance,
+            container = npcInstance
         })
     end
 end
@@ -138,10 +137,10 @@ local function onObjectActive(object)
 
     local marked = lootTracker:get(object.id)
     if (marked ~= nil) and ((marked == true) or (marked + resetLootAge > now)) then
-        --settings.debugPrint("object activated again")
+        -- settings.debugPrint("object activated again")
         return
     end
-    --settings.debugPrint("object activated for the first time")
+    -- settings.debugPrint("object activated for the first time")
 
     if isBookSeller(object) then
         -- Keep book seller spell book inventory stocked.
@@ -163,7 +162,7 @@ local function onObjectActive(object)
                         core.sendGlobalEvent("ernCreateSpellbook", {
                             spellID = validSpell.id,
                             corruption = nil,
-                            container = object,
+                            container = object
                         })
                         placedBook = true
                     end
@@ -180,7 +179,7 @@ local function onObjectActive(object)
                 core.sendGlobalEvent("ernCreateSpellbook", {
                     spellID = spellUtil.getRandomSpells(getHighestPlayerLevel(), 1)[1].id,
                     corruption = nil,
-                    container = object,
+                    container = object
                 })
             end
         end
@@ -193,10 +192,8 @@ local function onObjectActive(object)
     lootTracker:set(object.id, true)
 end
 
-
-
 return {
     engineHandlers = {
-        onObjectActive = onObjectActive,
+        onObjectActive = onObjectActive
     }
 }

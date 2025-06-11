@@ -24,8 +24,8 @@ local self = require("openmw.self")
 -- This is applied to all creatures, NPCs, and players (for self-casts).
 
 local function handleSpellCast(caster, target, spell)
-    settings.debugPrint("Spell Cast: " .. caster.id .. " cast ".. spell.id .. " on " .. target.id)
-    
+    settings.debugPrint("Spell Cast: " .. caster.id .. " cast " .. spell.id .. " on " .. target.id)
+
     core.sendGlobalEvent("ernHandleSpellCast", {
         caster = caster,
         target = target,
@@ -49,11 +49,10 @@ local handledActiveSpellIds = {}
 
 local function onUpdate(dt)
     for id, spell in pairs(types.Actor.activeSpells(self)) do
-        if (spell.caster ~= nil) and
-        (spell.caster.type == types.Player) and 
-        (handledActiveSpellIds[spell.activeSpellId] ~= true) then
+        if (spell.caster ~= nil) and (spell.caster.type == types.Player) and
+            (handledActiveSpellIds[spell.activeSpellId] ~= true) then
             -- player cast a new spell on this actor
-            --print("player casts " .. spell.name .. " (".. id .. ") .. activeID: " .. spell.activeSpellId)
+            -- print("player casts " .. spell.name .. " (".. id .. ") .. activeID: " .. spell.activeSpellId)
             -- is it a real spell?
             if (spell.temporary) and -- Filter weird stuff.
             (spell.fromEquipment ~= true) and -- Filter weird stuff.
@@ -64,16 +63,15 @@ local function onUpdate(dt)
                 if types.Actor.spells(spell.caster)[id] then
                     handleSpellCast(spell.caster, self, spell)
                 end
-            elseif (spell.item ~= nil) and 
-            (spell.item.type == types.Book) and (spell.caster.id == self.id) then
+            elseif (spell.item ~= nil) and (spell.item.type == types.Book) and (spell.caster.id == self.id) then
                 local bookRecord = types.Book.record(spell.item)
                 if (bookRecord ~= nil) and (bookRecord.enchant ~= nil) and
-                (string.lower(types.Book.record(spell.item).enchant) == "ernspellbooks_learnenchantment") then
+                    (string.lower(types.Book.record(spell.item).enchant) == "ernspellbooks_learnenchantment") then
                     handleLearn(self, bookRecord)
                 end
             end
-        -- don't handle this spell again
-        handledActiveSpellIds[spell.activeSpellId] = true
+            -- don't handle this spell again
+            handledActiveSpellIds[spell.activeSpellId] = true
         end
     end
 end

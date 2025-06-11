@@ -27,7 +27,6 @@ end
 -- minimumLevel informs when it should drop in random tables. This is an integer.
 local corruptionTable = {}
 
-
 -- data has .id, .func, and .minimumLevel
 -- func takes in a bag with these fields:
 --      id (string, this is the corruptionID)
@@ -58,7 +57,7 @@ local function getCorruption(corruptionID)
     -- description
     local corruptionDescription = localization("corruption_" .. tostring(corruptionID) .. "_description")
 
-    bag = corruptionTable[corruptionID]
+    local bag = corruptionTable[corruptionID]
     if bag == nil then
         error("corruption with id '" .. corruptionID .. "' not found!")
         return nil
@@ -70,7 +69,7 @@ local function getCorruption(corruptionID)
         description = corruptionDescription,
         id = bag.id,
         func = bag.func,
-        minimumLevel = bag.minimumLevel,
+        minimumLevel = bag.minimumLevel
     }
 end
 
@@ -79,6 +78,6 @@ return {
     interface = {
         version = 1,
         registerCorruption = registerCorruption,
-        getCorruption = getCorruption,
+        getCorruption = getCorruption
     }
 }

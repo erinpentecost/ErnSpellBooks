@@ -24,7 +24,6 @@ local self = require("openmw.self")
 local localization = core.l10n(settings.MOD_NAME)
 local ui = require('openmw.ui')
 
-
 interfaces.Settings.registerPage {
     key = settings.MOD_NAME,
     l10n = settings.MOD_NAME,
@@ -32,28 +31,33 @@ interfaces.Settings.registerPage {
     description = "description"
 }
 
-
 local function onActive()
     if settings.debugMode() then
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'weapon eater',
             corruption = nil,
-            container = self,
+            container = self
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'weapon eater',
-            corruption = {['prefixID'] = 'style', ['suffixID'] = 'normal'},
-            container = self,
+            corruption = {
+                ['prefixID'] = 'style',
+                ['suffixID'] = 'normal'
+            },
+            container = self
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spellUtil.getRandomSpells(50, 1)[1].id,
             corruption = nil,
-            container = self,
+            container = self
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spellUtil.getRandomSpells(3, 1)[1].id,
-            corruption = {['prefixID'] = 'normal', ['suffixID'] = 'style'},
-            container = self,
+            corruption = {
+                ['prefixID'] = 'normal',
+                ['suffixID'] = 'style'
+            },
+            container = self
         })
     end
 end
@@ -77,12 +81,10 @@ end
 
 return {
     eventHandlers = {
-        ernShowLearnMessage = showLearnMessage,
+        ernShowLearnMessage = showLearnMessage
     },
     engineHandlers = {
         onActive = onActive
     }
 }
-
-
 

@@ -71,22 +71,21 @@ end
 
 -- return a random suitable spells of a reasonable power level
 local function getRandomSpells(playerLevel, count)
-    randList = {}
+    local randList = {}
     for _, spell in pairs(core.magic.spells.records) do
         if spellOk(playerLevel, spell) then
             -- get random index to insert into. 1 to size+1.
             -- # is a special op that gets size
-            insertAt = math.random(1, 1+#randList) 
+            local insertAt = math.random(1, 1 + #randList)
             table.insert(randList, insertAt, spell)
-            --settings.debugPrint(spell.id .. " cost: " .. spell.cost)
+            -- settings.debugPrint(spell.id .. " cost: " .. spell.cost)
         end
     end
 
     return {table.unpack(randList, 1, count)}
 end
 
-
 return {
     getValidSpell = getValidSpell,
-    getRandomSpells = getRandomSpells,
+    getRandomSpells = getRandomSpells
 }

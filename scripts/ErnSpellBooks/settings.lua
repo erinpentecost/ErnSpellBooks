@@ -54,39 +54,35 @@ local function initSettings()
         description = "modSettingsDesc",
         page = MOD_NAME,
         permanentStorage = false,
-        settings = {
-            {
-                key = "costScale",
-                name = "costScale_name",
-                description = "costScale_description",
-                default = 1,
-                renderer = "number",
-                argument = {
-                    integer = false,
-                    min = 0,
-                    max = 100
-                }
-            },
-            {
-                key = "spawnChance",
-                name = "spawnChance_name",
-                description = "spawnChance_description",
-                default = 100,
-                renderer = "number",
-                argument = {
-                    integer = true,
-                    min = 0,
-                    max = 100
-                }
-            },
-            {
-                key = "debugMode",
-                name = "debugMode_name",
-                description = "debugMode_description",
-                default = true,
-                renderer = "checkbox"
+        settings = {{
+            key = "costScale",
+            name = "costScale_name",
+            description = "costScale_description",
+            default = 1,
+            renderer = "number",
+            argument = {
+                integer = false,
+                min = 0,
+                max = 100
             }
-        }
+        }, {
+            key = "spawnChance",
+            name = "spawnChance_name",
+            description = "spawnChance_description",
+            default = 100,
+            renderer = "number",
+            argument = {
+                integer = true,
+                min = 0,
+                max = 100
+            }
+        }, {
+            key = "debugMode",
+            name = "debugMode_name",
+            description = "debugMode_description",
+            default = true,
+            renderer = "checkbox"
+        }}
     }
 end
 
@@ -98,5 +94,5 @@ return {
     costScale = costScale,
     spawnChance = spawnChance,
     debugMode = debugMode,
-    debugPrint = debugPrint,
+    debugPrint = debugPrint
 }
