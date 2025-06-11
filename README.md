@@ -21,7 +21,7 @@ content=ErnSpellBooks.omwscripts
 
 ## Contributing
 
-Feel free to submit a PR to the [repo](https://github.com/erinpentecost/ErnSpellBooks) provided you certify that your contribution under the [Developer Certificate of Origin](https://developercertificate.org/).
+Feel free to submit a PR to the [repo](https://github.com/erinpentecost/ErnSpellBooks) provided you certify your contribution under the [Developer Certificate of Origin](https://developercertificate.org/).
 
 ### omwaddon
 The omwaddon contains these entries:
