@@ -37,7 +37,7 @@ You also need to add these fields to the localization file for every corruption 
 ```yaml
 corruption_mycoolthing_prefix: "Gigantic"
 corruption_mycoolthing_suffix: "the Giant"
-corruption_mycoolthing_description: "Targets become increase in size."
+corruption_mycoolthing_description: "Targets grow in size."
 ```
 
 The spell name will appear as "Gigantic *Fire Bite* of the Giant". The description will end up in the spell book when it's read.
