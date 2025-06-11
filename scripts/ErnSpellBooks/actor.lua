@@ -24,7 +24,10 @@ local self = require("openmw.self")
 -- This is applied to all creatures, NPCs, and players (for self-casts).
 
 local function handleSpellCast(caster, target, spell)
-    settings.debugPrint("Spell Cast: " .. caster.id .. " cast " .. spell.id .. " on " .. target.id)
+    -- I want to also get a unique ID per spell cast,
+    -- so I can dedupe spells that have area effects.
+    -- not sure how to do that, though.
+    settings.debugPrint("Spell Cast: " .. caster.id .. " cast " .. spell.id .. " on " .. target.id .. ". activeID: " .. spell.activeSpellId)
 
     core.sendGlobalEvent("ernHandleSpellCast", {
         caster = caster,
@@ -52,7 +55,7 @@ local function onUpdate(dt)
         if (spell.caster ~= nil) and (spell.caster.type == types.Player) and
             (handledActiveSpellIds[spell.activeSpellId] ~= true) then
             -- player cast a new spell on this actor
-            -- print("player casts " .. spell.name .. " (".. id .. ") .. activeID: " .. spell.activeSpellId)
+            -- activeSpellId is unique per spell per actor the ActiveSpell is on
             -- is it a real spell?
             if (spell.temporary) and -- Filter weird stuff.
             (spell.fromEquipment ~= true) and -- Filter weird stuff.

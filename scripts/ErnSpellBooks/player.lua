@@ -39,7 +39,7 @@ local function onActive()
             container = self
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
-            spellID = 'weapon eater',
+            spellID = 'lightning storm',
             corruption = {
                 ['prefixID'] = 'style',
                 ['suffixID'] = 'normal'

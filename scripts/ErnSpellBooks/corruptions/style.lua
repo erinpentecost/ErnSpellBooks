@@ -28,7 +28,7 @@ end
 local stylishHatRecordID = "fur_colovian_helm"
 
 -- The function that actually does the thing.
--- data has fields: id, caster, target, spellID, sourceBook
+-- data has fields: id, caster, target, spellID, sourceBook, frameID
 local function applyCorruption(data)
     -- don't do anything if they already have a hat
     local currentHat = types.Actor.getEquipment(data.target, types.Actor.EQUIPMENT_SLOT.Helmet)

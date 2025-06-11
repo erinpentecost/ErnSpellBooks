@@ -53,6 +53,16 @@ local function requireCorruptions()
 end
 requireCorruptions()
 
+-- maintain a frame counter so corruption handlers
+-- can dedupe casts.
+local frameID = 0
+local function onUpdate(dt)
+    frameID = frameID + 1
+    if frameID > 9007199254740000 then
+        frameID = 0
+    end
+end
+
 -- bookTracker should map a couple things:
 -- ["actor_" .. actorID .. "_spell_" .. spellID] -> {bookRecordID}
 -- ["book_" .. bookRecordID] -> {spell bag}
@@ -190,19 +200,22 @@ function handleSpellCast(data)
     -- ok, have some corruption ids at this point.
     -- apply them!
     -- id, caster, target, spellID, bookRecordID
+    settings.debugPrint("handling corrupted spell at frameID: " .. frameID)
     interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID).func({
         id = corruption.prefixID,
         caster = data.caster,
         target = data.target,
         spellID = data.spellID,
-        bookRecordID = sourceBook
+        bookRecordID = sourceBook,
+        frameID=frameID,
     })
     interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID).func({
         id = corruption.suffixID,
         caster = data.caster,
         target = data.target,
         spellID = data.spellID,
-        bookRecordID = sourceBook
+        bookRecordID = sourceBook,
+        frameID=frameID,
     })
 end
 
@@ -262,6 +275,7 @@ return {
     },
     engineHandlers = {
         onSave = saveState,
-        onLoad = loadState
+        onLoad = loadState,
+        onUpdate = onUpdate
     }
 }

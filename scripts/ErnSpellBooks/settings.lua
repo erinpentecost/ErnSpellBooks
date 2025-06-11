@@ -83,7 +83,7 @@ local function initSettings()
             key = "corruptionChance",
             name = "corruptionChance_name",
             description = "corruptionChance_description",
-            default = 66,
+            default = 5,
             renderer = "number",
             argument = {
                 integer = true,

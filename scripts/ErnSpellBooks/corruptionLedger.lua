@@ -91,11 +91,9 @@ local function getRandomCorruptionIDs(playerLevel, count)
             -- get random index to insert into. 1 to size+1.
             local insertAt = math.random(1, 1 + #randList)
             table.insert(randList, insertAt, id)
-            -- >>>> this is getting hit twice <<<<
             settings.debugPrint("getRandomCorruptions() inserted " .. corruption.id)
         end
     end
-    -- >>>> but randList is empty and outList is has 3 elements!! <<<<<
     local outList = {table.unpack(randList, 1, 1+count)}
     settings.debugPrint("getRandomCorruptions() selected " .. tostring(#outList) .. " corruptions from " .. tostring(#randList) .. " options.")
     return outList
