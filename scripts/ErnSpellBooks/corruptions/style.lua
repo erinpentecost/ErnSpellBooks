@@ -31,7 +31,15 @@ local stylishHatRecordID = "fur_colovian_helm"
 
 local deleteHatCallback = async:registerTimerCallback('ernDeleteHatCallback',
 function(data)
-    data:remove()
+    data['styleHat']:remove()
+
+    if data['oldHat'] ~= nil then
+        core.sendGlobalEvent('UseItem', {
+            object = data['oldHat'],
+            actor = data['target'],
+            force = false
+        })
+    end
 end)
 
 -- The function that actually does the thing.
@@ -56,7 +64,11 @@ local function applyCorruption(data)
 
     -- delete the hat when the spell expires (or after 5 sec)
     local duration = math.max(5, spellUtil.getSpellDuration(data.spellID))
-    async:newSimulationTimer(duration, deleteHatCallback, hatInstance)
+    async:newSimulationTimer(duration, deleteHatCallback, {
+        ['styleHat']=hatInstance,
+        ['oldHat']=currentHat,
+        ['target']=data.target,
+    })
 end
 
 -- Register the corruption in the ledger.
