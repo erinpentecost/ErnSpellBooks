@@ -1,5 +1,9 @@
 # ErnSpellBooks
-OpenMW mod that adds Spell Books, which teach you a spell when you read them. Spell Books can be corrupted through a dark ritual that will increase their power but also add a random drawback.
+OpenMW mod that adds Spell Books, which teach you a spell when you read them. Rare Corrupted Spell Books have additional wild effects!
+
+Spell Books can contain a huge variety of spells, since they are drawn from all existing (suitable) spells in your world, including those added from other mods.
+
+Spell Books can spawn on magic-using NPCs or in appropriate containers. A few will also be for sale in any book shop, which will be restocked once per day.
 
 ![example](title_image.jpg)
 
