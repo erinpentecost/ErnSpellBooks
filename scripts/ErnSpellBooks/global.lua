@@ -141,23 +141,46 @@ function createSpellbook(data)
     end
 end
 
--- params: caster, target, spellID
-function handleSpellCast(data)
-    if data.caster == nil then
-        error("handleSpellCast caster is nil")
+local function getSourceBookForCast(data)
+    local playerSpellKey = "actor_" .. data.caster.id .. "_spell_" .. data.spellID
+    return bookTracker:get(playerSpellKey)
+end
+
+local function getCorruptionsFromBookID(sourceBook)
+    local spellBag = bookTracker:get("book_" .. sourceBook)
+    if spellBag == nil then
+        error("missing book entry for " .. sourceBook)
         return
     end
-    if data.target == nil then
-        error("handleSpellCast target is nil")
+    local corruptions = spellBag['corruption']
+    if (corruptions == nil) then
+        -- don't do anything for a normal spell
+        return
+    end
+    if (corruptions.prefixID == nil) then
+        error("missing prefixID for " .. sourceBook)
+        return
+    end
+    if (corruptions.suffixID == nil) then
+        error("missing suffixID for " .. sourceBook)
+        return
+    end
+    settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruptions.prefixID .. " and suffix " ..
+                            corruptions.suffixID)
+    return corruptions
+end
+
+function handleSpellCast(data)
+    if data.caster == nil then
+        error("handleSpellApply caster is nil")
         return
     end
     if data.spellID == nil then
-        error("handleSpellCast spellID is nil")
+        error("handleSpellApply spellID is nil")
         return
     end
 
-    local playerSpellKey = "actor_" .. data.caster.id .. "_spell_" .. data.spellID
-    local sourceBook = bookTracker:get(playerSpellKey)
+    local sourceBook = getSourceBookForCast(data)
 
     if sourceBook == nil then
         settings.debugPrint("spell cast, but wasn't learned from a book")
@@ -165,26 +188,33 @@ function handleSpellCast(data)
 
     settings.debugPrint("handleSpellCast from " .. sourceBook)
 
-    local spellBag = bookTracker:get("book_" .. sourceBook)
-    if spellBag == nil then
-        error("missing book entry for " .. sourceBook)
+    -- TODO: forward event to onCast
+end
+
+function handleSpellApply(data)
+    if data.caster == nil then
+        error("handleSpellApply caster is nil")
         return
     end
-    local corruption = spellBag['corruption']
-    if (corruption == nil) then
-        -- don't do anything for a normal spell
+    if data.target == nil then
+        error("handleSpellApply target is nil")
         return
     end
-    if (corruption.prefixID == nil) then
-        error("missing prefixID for " .. sourceBook)
+    if data.spellID == nil then
+        error("handleSpellApply spellID is nil")
         return
     end
-    if (corruption.suffixID == nil) then
-        error("missing suffixID for " .. sourceBook)
-        return
+
+    local sourceBook = getSourceBookForCast(data)
+
+    if sourceBook == nil then
+        settings.debugPrint("spell cast, but wasn't learned from a book")
     end
-    settings.debugPrint(sourceBook .. " contains corruption prefix " .. corruption.prefixID .. " and suffix " ..
-                            corruption.suffixID)
+
+    settings.debugPrint("handleSpellApply from " .. sourceBook)
+
+    local corruption = getCorruptionsFromBookID(sourceBook)
+
     -- ok, have some corruption ids at this point.
     -- apply them!
     -- id, caster, target, spellID, bookRecordID
@@ -255,12 +285,12 @@ end
 return {
     eventHandlers = {
         ernCreateSpellbook = createSpellbook,
+        ernHandleSpellApply = handleSpellApply,
         ernHandleSpellCast = handleSpellCast,
         ernLearnSpell = learnSpell
     },
     engineHandlers = {
         onSave = saveState,
         onLoad = loadState,
-        onUpdate = onUpdate
     }
 }

@@ -20,18 +20,27 @@ local settings = require("scripts.ErnSpellBooks.settings")
 local types = require("openmw.types")
 local core = require("openmw.core")
 local self = require("openmw.self")
+local animation = require('openmw.animation')
 
 -- This is applied to all creatures, NPCs, and players (for self-casts).
 
-local function handleSpellCast(caster, target, spell)
-    -- I want to also get a unique ID per spell cast,
-    -- so I can dedupe spells that have area effects.
-    -- not sure how to do that, though.
-    settings.debugPrint("Spell Cast: " .. caster.id .. " cast " .. spell.id .. " on " .. target.id .. ". activeID: " .. spell.activeSpellId)
+-- handleSpellApply is invoked once per target.
+local function handleSpellApply(caster, target, spell)
+    settings.debugPrint("Spell Apply: " .. caster.id .. " cast " .. spell.id .. " on " .. target.id)
+
+    core.sendGlobalEvent("ernHandleSpellApply", {
+        caster = caster,
+        target = target,
+        spellID = spell.id
+    })
+end
+
+-- handleSpellCast is invoked once per cast.
+local function handleSpellCast(caster, spell)
+    settings.debugPrint("Spell Cast: " .. caster.id .. " cast " .. spell.id)
 
     core.sendGlobalEvent("ernHandleSpellCast", {
         caster = caster,
-        target = target,
         spellID = spell.id
     })
 end
@@ -64,7 +73,7 @@ local function onUpdate(dt)
                 -- It could be a potion or scroll.
                 -- Let's assume the player cast it if they know the spell.
                 if types.Actor.spells(spell.caster)[id] then
-                    handleSpellCast(spell.caster, self, spell)
+                    handleSpellApply(spell.caster, self, spell)
                 end
             elseif (spell.item ~= nil) and (spell.item.type == types.Book) and (spell.caster.id == self.id) then
                 local bookRecord = types.Book.record(spell.item)
@@ -83,9 +92,27 @@ local function onInactive()
     handledActiveSpellIds = {}
 end
 
+local function onActive()
+    -- TODO: move learning into an animation handler so I don't need
+    -- to check for the special spell effect. I can just check if the
+    -- spell was cast from a book directly.
+
+    interfaces.AnimationController.addTextKeyHandler("spellcast", function(group, key)
+        if key:find('release') then
+            -- cast finished?
+            local spell = types.Actor.getSelectedSpell(self)
+            -- finish might also happen when group = idle and key = start
+            settings.debugPrint("spellcast release for actor " .. self.id)
+            handleSpellCast(self, spell)
+        end
+      end)
+end
+
+
 return {
     engineHandlers = {
         onUpdate = onUpdate,
-        onInactive = onInactive
+        onInactive = onInactive,
+        onActive = onActive,
     }
 }
