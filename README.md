@@ -1,5 +1,5 @@
 # ErnSpellBooks
-OpenMW mod that adds Spell Books, which teach you a spell when you read them. Rare Corrupted Spell Books have additional wild effects!
+OpenMW mod that adds Spell Books, which teach you a spell when you read cast them. Rare Corrupted Spell Books have additional wild effects! Spell Books are a pathway to many abilities the Mages Guild consider to be unnatural.
 
 Spell Books can contain a huge variety of spells, since they are drawn from all existing (suitable) spells in your world, including those added from other mods.
 
@@ -26,6 +26,7 @@ Feel free to submit a PR to the [repo](https://github.com/erinpentecost/ErnSpell
 ### omwaddon
 The omwaddon contains these entries:
 * enchantment: `ErnSpellBooks_LearnEnchantment` (casts DrainMagicka on self for 1 sec)
+* spell: `ErnSpellBooks_restore_magicka`. effects are duration = 2^(index of effect - 1)
 
 ### TODO
 * Corruption Orbs

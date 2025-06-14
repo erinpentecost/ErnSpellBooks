@@ -15,6 +15,9 @@ interfaces.ErnCorruptionLedger.registerCorruption({
     onApply = myCorruptionOnApplyFunction,
     onCast = myCorruptionOnCastFunction,
     minimumLevel = 1,
+    prefixName = "localized name of the corruption when used as a prefix",
+    suffixName = "localized name of the corruption when used as a suffix",
+    description = "localized description of the corruption inside the spellbook",
 })
 ```
 
@@ -35,17 +38,6 @@ interfaces.ErnCorruptionLedger.registerCorruption({
 * `spellID` - This is the spell ID for the base spell this corruption was attached to.
 * `sourceBook` - This is the book record ID that the corrupted spell was cast from.
 
-
 `minimumLevel` informs the loot generator to not spawn this corruption until the player level is at least this number. It's optional.
 
-### Localization
-
-You also need to add these fields to the localization file for every corruption you add:
-
-```yaml
-corruption_mycoolthing_prefix: "Gigantic"
-corruption_mycoolthing_suffix: "the Giant"
-corruption_mycoolthing_description: "Targets grow in size."
-```
-
-The spell name will appear as "Gigantic *Fire Bite* of the Giant". The description will end up in the spell book when it's read.
+`prefixName`, `suffixName`, and `description` should be localized strings. The spell name will appear as "**Prefix** Fire Bite of **Suffix**". The description will end up in the spell book when it's read.

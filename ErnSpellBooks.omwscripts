@@ -1,5 +1,8 @@
 GLOBAL:scripts/ErnSpellBooks/corruptionLedger.lua
 GLOBAL:scripts/ErnSpellBooks/global.lua
 PLAYER:scripts/ErnSpellBooks/player.lua
-NPC, CREATURE, PLAYER:scripts/ErnSpellBooks/actor.lua
+NPC, CREATURE, PLAYER:scripts/ErnSpellBooks/actorDetectApply.lua
+NPC, CREATURE, PLAYER:scripts/ErnSpellBooks/actorLearnSpell.lua
+NPC, CREATURE, PLAYER:scripts/ErnSpellBooks/actorFX.lua
+NPC, CREATURE, PLAYER:scripts/ErnSpellBooks/actorModifyStats.lua
 GLOBAL:scripts/ErnSpellBooks/loot.lua

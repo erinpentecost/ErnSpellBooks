@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 local settings = require("scripts.ErnSpellBooks.settings")
 local core = require("openmw.core")
-local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
@@ -29,7 +28,12 @@ local corruptionTable = {}
 -- corruptionIDs is list of just IDs.
 local corruptionIDs = {}
 
--- data has .id, .onApply, .OnCast, and (optionally).minimumLevel
+-- data has these fields:
+-- id
+-- minimumLevel
+-- prefixName
+-- suffixName
+-- description
 -- onCast takes in a bag with these fields:
 --      id (string, this is the corruptionID)
 --      caster (actor)
@@ -44,6 +48,10 @@ local corruptionIDs = {}
 local function registerCorruption(data)
     if (data == nil) or (data.id == nil) or (data.id == "") or ((data.onApply == nil) and (data.onCast == nil)) then
         error("RegisterCorruption() bad data")
+        return
+    end
+    if (data.prefixName == nil) or (data.suffixName == nil) or (data.description == nil) then
+        error("RegisterCorruption() bad localization fields in data")
         return
     end
     if corruptionTable[data.id] ~= nil then
@@ -63,14 +71,6 @@ local function getCorruption(corruptionID)
     if (corruptionID == nil) or (corruptionID == "") then
         return nil
     end
-    -- prefix name
-    local corruptionPrefix = localization("corruption_" .. tostring(corruptionID) .. "_prefix")
-
-    -- suffix name
-    local corruptionSuffix = localization("corruption_" .. tostring(corruptionID) .. "_suffix")
-
-    -- description
-    local corruptionDescription = localization("corruption_" .. tostring(corruptionID) .. "_description")
 
     local bag = corruptionTable[corruptionID]
     if bag == nil then
@@ -78,15 +78,7 @@ local function getCorruption(corruptionID)
         return nil
     end
 
-    return {
-        prefix = corruptionPrefix,
-        suffix = corruptionSuffix,
-        description = corruptionDescription,
-        id = bag.id,
-        onApply = bag.onApply,
-        onCast = bag.onCast,
-        minimumLevel = bag.minimumLevel
-    }
+    return bag
 end
 
 local function getRandomCorruptionIDs(playerLevel, count)
@@ -103,7 +95,7 @@ local function getRandomCorruptionIDs(playerLevel, count)
             settings.debugPrint("getRandomCorruptions() inserted " .. corruption.id)
         end
     end
-    local outList = {table.unpack(randList, 1, 1+count)}
+    local outList = {table.unpack(randList, 1, count)}
     settings.debugPrint("getRandomCorruptions() selected " .. tostring(#outList) .. " corruptions from " .. tostring(#randList) .. " options.")
     return outList
 end

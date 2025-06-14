@@ -72,7 +72,7 @@ local function initSettings()
             key = "spawnChance",
             name = "spawnChance_name",
             description = "spawnChance_description",
-            default = 100,
+            default = 20,
             renderer = "number",
             argument = {
                 integer = true,
@@ -94,7 +94,7 @@ local function initSettings()
             key = "debugMode",
             name = "debugMode_name",
             description = "debugMode_description",
-            default = true,
+            default = false,
             renderer = "checkbox"
         }}
     }

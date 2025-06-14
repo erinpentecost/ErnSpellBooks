@@ -14,25 +14,44 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-]]
-local world = require('openmw.world')
+]] local world = require('openmw.world')
 local core = require("openmw.core")
 local settings = require("scripts.ErnSpellBooks.settings")
 local interfaces = require('openmw.interfaces')
-
+local types = require("openmw.types")
+local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
 end
 
 -- The function that actually does the thing.
--- data has fields: id, caster, target, spellID, sourceBook
-local function applyCorruption(data)
-    -- This is a no-op!
+-- data has fields: id, caster, spellID, sourceBook
+local function onCast(data)
+    if data.caster == nil then
+        error("caster is nil")
+        return
+    end
+
+    local totalCost = core.magic.spells.records[data.spellID].cost
+    local magickaStat = data.caster.type.stats.dynamic.magicka(data.caster)
+    local healthStat = data.caster.type.stats.dynamic.health(data.caster)
+
+    local transfer = math.min(healthStat.current - 1, totalCost)
+
+    data.caster:sendEvent("ernModifyStats", {
+        modHealth = -transfer,
+        modMagicka = transfer
+    })
 end
 
+local id = "blood"
 -- Register the corruption in the ledger.
 interfaces.ErnCorruptionLedger.registerCorruption({
-    id = "normal",
-    onApply = applyCorruption,
+    id = id,
+    onCast = onCast,
+    minimumLevel = 3,
+    prefixName = localization("corruption_" .. tostring(id) .. "_prefix"),
+    suffixName = localization("corruption_" .. tostring(id) .. "_suffix"),
+    description = localization("corruption_" .. tostring(id) .. "_description"),
 })

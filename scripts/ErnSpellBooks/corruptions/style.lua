@@ -22,6 +22,7 @@ local interfaces = require('openmw.interfaces')
 local types = require("openmw.types")
 local spellUtil = require("scripts.ErnSpellBooks.spellUtil")
 local async = require('openmw.async')
+local localization = core.l10n(settings.MOD_NAME)
 
 if require("openmw.core").API_REVISION < 62 then
     error("OpenMW 0.49 or newer is required!")
@@ -71,9 +72,13 @@ local function applyCorruption(data)
     })
 end
 
+local id = "style"
 -- Register the corruption in the ledger.
 interfaces.ErnCorruptionLedger.registerCorruption({
-    id = "style",
+    id = id,
     onApply = applyCorruption,
-    minimumLevel = 1
+    minimumLevel = 1,
+    prefixName = localization("corruption_" .. tostring(id) .. "_prefix"),
+    suffixName = localization("corruption_" .. tostring(id) .. "_suffix"),
+    description = localization("corruption_" .. tostring(id) .. "_description")
 })

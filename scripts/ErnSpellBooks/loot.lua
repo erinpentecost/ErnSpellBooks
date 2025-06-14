@@ -44,16 +44,16 @@ local function loadState(saved)
 end
 
 local wizardClasses = {
-    ["battlemage"] = true,
-    ["healer"] = true,
-    ["mage"] = true,
-    ["sorcerer"] = true,
-    ["mabrigash"] = true,
-    ["necromancer"] = true,
-    ["priest"] = true,
-    ["warlock"] = true,
-    ["wise woman"] = true,
-    ["witch"] = true
+    "battlemage",
+    "healer",
+    "mage",
+    "sorcerer",
+    "mabrigash",
+    "necromancer",
+    "priest",
+    "warlock",
+    "wise woman",
+    "witch"
 }
 
 local function isBookSeller(npcInstance)
@@ -67,7 +67,12 @@ end
 local function isWizard(npcInstance)
     if (types.NPC.objectIsInstance(npcInstance)) then
         local npcClass = types.NPC.record(npcInstance).class
-        return wizardClasses[npcClass] == true
+        for _, match in ipairs(wizardClasses) do
+            if string.match(npcClass, ".*" .. match .. ".*") ~= nil then
+                settings.debugPrint("detected a " .. match)
+                return true
+            end
+        end
     end
     return false
 end
@@ -119,8 +124,11 @@ local function getRandomCorruption()
         end
         corruption = {
             ['prefixID'] = randList[1],
-            ['suffixID'] = randList[2],
         }
+        -- roll again for suffix
+        if settings.corruptionChance() > math.random(0, 99) then
+            corruption['suffixID'] = randList[2]
+        end
     end
     return corruption
 end
@@ -174,15 +182,17 @@ local function onObjectActive(object)
             local actorSpells = shuffle(types.Actor.spells(object))
             local placedBook = false
             for _, spell in ipairs(actorSpells) do
-                if placedBook ~= false then
+                if placedBook == false then
                     local validSpell = spellUtil.getValidSpell(spell)
                     if validSpell ~= nil then
-                        settings.debugPrint("found spell " .. validSpell.name .. " on " .. object.id)
+                        settings.debugPrint("found spell on wizard: " .. validSpell.name .. " on wizard " .. object.id)
                         core.sendGlobalEvent("ernCreateSpellbook", {
                             spellID = validSpell.id,
                             corruption = getRandomCorruption(),
-                            container = object
+                            container = object,
+                            actor = object,
                         })
+                        
                         placedBook = true
                     end
                 end

@@ -14,10 +14,8 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-]]
-local types = require("openmw.types")
+]] local types = require("openmw.types")
 local settings = require("scripts.ErnSpellBooks.settings")
-local core = require("openmw.core")
 local core = require("openmw.core")
 local localization = core.l10n(settings.MOD_NAME)
 
@@ -113,20 +111,27 @@ local function getSpellName(spellOrSpellID, prefixCorruption, suffixCorruption)
     elseif (prefixCorruption ~= nil) and (suffixCorruption == nil) then
         return localization("spell_name_with_prefix", {
             spellName = spell.name,
-            corruptionPrefix = prefixCorruption.prefix,
+            corruptionPrefix = prefixCorruption.prefixName
         })
     elseif (prefixCorruption == nil) and (suffixCorruption ~= nil) then
         return localization("spell_name_with_suffix", {
             spellName = spell.name,
-            corruptionSuffix = suffixCorruption.suffix,
+            corruptionSuffix = suffixCorruption.suffixName
         })
     else
         return localization("spell_name_with_both", {
             spellName = spell.name,
-            corruptionPrefix = prefixCorruption.prefix,
-            corruptionSuffix = suffixCorruption.suffix,
+            corruptionPrefix = prefixCorruption.prefixName,
+            corruptionSuffix = suffixCorruption.suffixName
         })
     end
+end
+
+local function applySpellFX(actor, spellID, effectIndices)
+    actor:sendEvent("ernApplySpellFX", {
+        spellID = spellID,
+        effectIndices = effectIndices,
+    })
 end
 
 return {
@@ -134,4 +139,5 @@ return {
     getRandomSpells = getRandomSpells,
     getSpellDuration = getSpellDuration,
     getSpellName = getSpellName,
+    applySpellFX = applySpellFX,
 }

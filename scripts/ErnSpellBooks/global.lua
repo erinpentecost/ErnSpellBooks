@@ -79,6 +79,55 @@ local function safeID(obj)
     end
 end
 
+-- params: actor, bookRecordID
+local function learnSpell(data)
+    if data.actor == nil then
+        error("learnSpell actor is nil")
+    end
+    if data.bookRecordID == nil then
+        error("learnSpell bookRecordID is nil")
+    end
+    print("learnSpell")
+
+    local spellBag = bookTracker:get("book_" .. data.bookRecordID)
+    if spellBag == nil then
+        error("no spell book record for " .. data.bookRecordID)
+        return
+    end
+
+    local spell = core.magic.spells.records[spellBag['spellID']]
+    if spell == nil then
+        error("unknown spell " .. spellBag['spellID'])
+    end
+
+    -- need to mark where the player learned the spell.
+    -- this lets us pull corruption info, if any.
+    local playerSpellKey = "actor_" .. data.actor.id .. "_spell_" .. spellBag['spellID']
+    bookTracker:set(playerSpellKey, data.bookRecordID)
+
+    -- actually add the spell to known spells
+    local actorSpells = types.Actor.spells(data.actor)
+    actorSpells:add(spell)
+
+    -- notify player
+    local spellName = ""
+    if spellBag['corruption'] == nil then
+        spellName = spellUtil.getSpellName(spell, nil, nil)
+    else
+        spellName = spellUtil.getSpellName(spell, interfaces.ErnCorruptionLedger
+            .getCorruption(spellBag['corruption']['prefixID']), interfaces.ErnCorruptionLedger
+            .getCorruption(spellBag['corruption']['suffixID']))
+    end
+
+    if (data.actor.type == types.Player) then
+        -- data.spellName, data.corruptionName
+        data.actor:sendEvent("ernShowLearnMessage", {
+            spellName = spellName,
+            spellID = spell.id
+        })
+    end
+end
+
 -- createSpellbook creates a spell book.
 -- params: data.spellID, data.corruption, data.container, data.setOwner
 local function createSpellbook(data)
@@ -142,12 +191,19 @@ local function createSpellbook(data)
     -- put in target inventory
     bookInstance:moveInto(data.container)
 
+    -- special case for shop keepers
     if data.setOwner then
         if (types.Actor.objectIsInstance(data.container)) then
             bookInstance.owner = data.container
         else
             error("data.setOwner is true but the container is not an actor")
         end
+    end
+
+    -- special case for wizards
+    if (data.actor ~= nil) and ((suffixCorruption ~= nil) or (prefixCorruption ~= nil)) then
+        settings.debugPrint("wizard actor learns corrupted spell")
+        learnSpell({actor=data.actor, bookRecordID=bookRecord.id})
     end
 end
 
@@ -293,51 +349,39 @@ local function handleSpellApply(data)
     end
 end
 
--- params: actor, bookRecordID
-local function learnSpell(data)
-    if data.actor == nil then
-        error("learnSpell actor is nil")
+local function selectSpell(data)
+    if (data.spellID == nil) or (data.caster == nil) then
+        error("selectSpell() bad data")
+        return
     end
-    if data.bookRecordID == nil then
-        error("learnSpell bookRecordID is nil")
-    end
-    print("learnSpell")
-
-    local spellBag = bookTracker:get("book_" .. data.bookRecordID)
-    if spellBag == nil then
-        error("no spell book record for " .. data.bookRecordID)
+    local sourceBook = getSourceBookForCast(data)
+    if sourceBook == nil then
+        settings.debugPrint("spell selected, but wasn't learned from a book")
         return
     end
 
-    local spell = core.magic.spells.records[spellBag['spellID']]
+    local spell = core.magic.spells.records[data.spellID]
     if spell == nil then
-        error("unknown spell " .. spellBag['spellID'])
+        error("unknown spell " .. data.spellID)
     end
 
-    -- need to mark where the player learned the spell.
-    -- this lets us pull corruption info, if any.
-    local playerSpellKey = "actor_" .. data.actor.id .. "_spell_" .. spellBag['spellID']
-    bookTracker:set(playerSpellKey, data.bookRecordID)
+    settings.debugPrint("selectSpell from " .. sourceBook)
 
-    -- actually add the spell to known spells
-    local actorSpells = types.Actor.spells(data.actor)
-    actorSpells:add(spell)
+    local corruption = getCorruptionsFromBookID(sourceBook)
 
-    -- notify player
-    local spellName = ""
-    if spellBag['corruption'] == nil then
-        spellName = spellUtil.getSpellName(spell, nil, nil)
-    else
-        spellName = spellUtil.getSpellName(spell, interfaces.ErnCorruptionLedger
-            .getCorruption(spellBag['corruption']['prefixID']), interfaces.ErnCorruptionLedger
-            .getCorruption(spellBag['corruption']['suffixID']))
+    if corruption == nil then
+        -- not corrupted, don't do anything else.
+        return
     end
 
-    if (data.actor.type == types.Player) then
-        -- data.spellName, data.corruptionName
-        data.actor:sendEvent("ernShowLearnMessage", {
+    local prefix = interfaces.ErnCorruptionLedger.getCorruption(corruption.prefixID)
+    local suffix = interfaces.ErnCorruptionLedger.getCorruption(corruption.suffixID)
+
+    local spellName = spellUtil.getSpellName(spell, prefix, suffix)
+
+    if (data.caster.type == types.Player) then
+        data.caster:sendEvent("ernShowSelectMessage", {
             spellName = spellName,
-            spellID = spell.id
         })
     end
 end
@@ -347,7 +391,8 @@ return {
         ernCreateSpellbook = createSpellbook,
         ernHandleSpellApply = handleSpellApply,
         ernHandleSpellCast = handleSpellCast,
-        ernLearnSpell = learnSpell
+        ernLearnSpell = learnSpell,
+        ernSelectSpell = selectSpell,
     },
     engineHandlers = {
         onSave = saveState,

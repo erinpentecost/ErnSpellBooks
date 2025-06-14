@@ -36,14 +36,16 @@ local function onActive()
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'lightning storm',
             corruption = {
-                ['prefixID'] = 'style',
+                ['prefixID'] = 'restitution',
+                ['suffixID'] = 'repetition',
             },
             container = self
         })
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = 'lightning storm',
             corruption = {
-                ['suffixID'] = 'style'
+                ['prefixID'] = 'gnome',
+                ['suffixID'] = 'blood'
             },
             container = self
         })
@@ -51,7 +53,7 @@ local function onActive()
         core.sendGlobalEvent("ernCreateSpellbook", {
             spellID = spellUtil.getRandomSpells(3, 1)[1].id,
             corruption = {
-                ['prefixID'] = 'normal',
+                ['prefixID'] = 'giant',
                 ['suffixID'] = 'style'
             },
             container = self
@@ -59,7 +61,42 @@ local function onActive()
     end
 end
 
--- params: data.spellName, data.corruptionName
+-- handleSpellCast is invoked once per cast.
+local function handleSpellCast(caster, spell)
+    settings.debugPrint("Spell Cast: " .. caster.id .. " cast " .. spell.id)
+
+    core.sendGlobalEvent("ernHandleSpellCast", {
+        caster = caster,
+        spellID = spell.id
+    })
+end
+
+local spellsSkills = {
+    ['alteration']=true,
+    ['conjuration']=true,
+    ['destruction']=true,
+    ['illusion']=true,
+    ['mysticism']=true,
+    ['restoration']=true
+}
+
+-- SkillProgression is used since I can't determine if a spell
+-- succeeds from the animation controller.
+-- SkillProgression only works for Players, though, so onCast corruptions
+-- won't work for NPCs.
+interfaces.SkillProgression.addSkillUsedHandler(function(skillID, options)
+    if spellsSkills[skillID] and (options.useType == interfaces.SkillProgression.SKILL_USE_TYPES.Spellcast_Success) then
+        settings.debugPrint("spell succeeded for actor " .. self.id .. ": " .. skillID)
+        local foundSpell = types.Actor.getSelectedSpell(self)
+        if (foundSpell ~= nil) then
+            settings.debugPrint("selected spell: " .. tostring(foundSpell.id))
+            handleSpellCast(self, foundSpell)
+        end
+    end
+end)
+
+
+
 local function showLearnMessage(data)
     settings.debugPrint("showLearnMessage")
     if data.spellName == nil then
@@ -74,12 +111,49 @@ local function showLearnMessage(data)
     types.Actor.setSelectedSpell(self, spell)
 end
 
+-- params: data.spellName
+local function showSelectMessage(data)
+    settings.debugPrint("showSelectMessage")
+    if data.spellName == nil then
+        error("showSelectMessage() bad spellName")
+        return
+    end
+
+    ui.showMessage(localization("selectMessage", data))
+end
+
+
+
+local lastEquippedSpellID = nil
+
+local function onUpdate()
+    local foundSpell = types.Actor.getSelectedSpell(self)
+    if (foundSpell == nil) then
+        lastEquippedSpellID = nil
+        return
+    end
+    if (foundSpell.id == lastEquippedSpellID) then
+        return
+    end
+    
+    
+    lastEquippedSpellID = foundSpell.id
+    -- spell changed
+    core.sendGlobalEvent("ernSelectSpell", {
+        caster = self,
+        spellID = foundSpell.id
+    })
+end
+
+
 return {
     eventHandlers = {
-        ernShowLearnMessage = showLearnMessage
+        ernShowLearnMessage = showLearnMessage,
+        ernShowSelectMessage = showSelectMessage
     },
     engineHandlers = {
-        onActive = onActive
+        onActive = onActive,
+        onUpdate = onUpdate,
     }
 }
 
